@@ -16,7 +16,8 @@
     ("Help", HELP) ;
     ("Quit",  QUIT) ;
     ("Parameter", PARAMETER) ;
-    ("Context", CONTEXT)
+    ("Context", CONTEXT) ;
+    ("Inductive", INDUCTIVE)
   ]
 
   let position_of_lex lex =
@@ -47,6 +48,7 @@ rule token = parse
   | "->"                { ARROW }
   | "=>"                { DARROW }
   | ":="                { COLONEQUAL }
+  | "|"                 { BAR }
   | eof                 { EOF }
 
 

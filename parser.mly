@@ -21,9 +21,9 @@
 %token <int> NUMERAL
 %token <string> NAME
 %token LPAREN RPAREN
-%token COLON COMMA PERIOD COLONEQUAL
+%token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP PARAMETER CHECK EVAL CONTEXT DEFINITION
+%token QUIT HELP PARAMETER CHECK EVAL CONTEXT DEFINITION INDUCTIVE
 %token EOF
 
 %start <Input.directive list> directives
@@ -54,6 +54,12 @@ plain_directive:
     { Definition (x, e) }
   | CONTEXT
     { Context }
+  | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
+    { Inductive (x,  e, cs)}
+
+constructor :
+  | BAR c = NAME COLON e = expr
+    { (c, e) }
 
 (* Main syntax tree *)
 expr: mark_position(plain_expr) { $1 }

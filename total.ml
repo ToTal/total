@@ -117,6 +117,15 @@ let rec exec_cmd interactive ctx (d, loc) =
       let t = Typing.infer ctx e in
         Format.printf "%t@\n    : %t@." (Print.expr ctx.names e) (Print.expr ctx.names t) ;
         ctx
+    | Input.Inductive (x, t, cs) ->
+       let t = Desugar.desugar ctx t in
+       let ctx = Context.add_parameter x t ctx in
+       let ctx' = List.fold_left 
+	 (fun c (n, t) -> Context.add_parameter n (Desugar.desugar ctx t)  c) 
+	 ctx cs 
+       in
+       Format.printf "%s is defined@." x ;
+       ctx'
     | Input.Help ->
       print_endline help_text ; ctx
     | Input.Quit -> exit 0

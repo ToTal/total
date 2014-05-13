@@ -22,3 +22,4 @@ and directive' =
   | Definition of Common.variable * expr
   | Check of expr
   | Eval of expr
+  | Inductive of Common.variable * expr * (Common.variable * expr) list
