@@ -1,0 +1,3 @@
+true : annot, use_menhir, use_ocamlfind
+
+<*.{native,byte}> : use_unix
