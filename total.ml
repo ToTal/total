@@ -9,7 +9,7 @@ let interactive_shell = ref true
 let wrapper = ref (Some ["rlwrap"; "ledit"])
 
 (** The usage message. *)
-let usage = "Usage: tt [option] ... [file] ..."
+let usage = "Usage: total [option] ... [file] ..."
 
 (** The help text printed when [Help.] is used. *)
 let help_text = "Toplevel commands:
@@ -48,7 +48,7 @@ let options = Arg.align [
     " Do not use a command-line wrapper");
   ("-v",
     Arg.Unit (fun () ->
-      print_endline ("tt " ^ Version.version ^ "(" ^ Sys.os_type ^ ")");
+      print_endline ("total " ^ Version.version ^ "(" ^ Sys.os_type ^ ")");
       exit 0),
     " Print version information and exit");
   ("-V",
@@ -133,7 +133,7 @@ let toplevel ctx =
     | "Win32" -> "Ctrl-Z"
     | _ -> "EOF"
   in
-  print_endline ("tt " ^ Version.version);
+  print_endline ("total " ^ Version.version);
   print_endline ("[Type " ^ eof ^ " to exit or \"Help.\" for help.]");
   try
     let ctx = ref ctx in

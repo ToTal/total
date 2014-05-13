@@ -1,13 +1,13 @@
 default: native
 
 native:
-	ocamlbuild  tt.native
+	ocamlbuild  total.native
 
 byte:
-	ocamlbuild tt.byte
+	ocamlbuild total.byte
 
 clean:
 	ocamlbuild -clean
 
 doc:
-	ocamlbuild -docflag -keep-code tt.docdir/index.html
+	ocamlbuild -docflag -keep-code total.docdir/index.html
