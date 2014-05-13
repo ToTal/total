@@ -118,10 +118,13 @@ let rec exec_cmd interactive ctx (d, loc) =
         Format.printf "%t@\n    : %t@." (Print.expr ctx.names e) (Print.expr ctx.names t) ;
         ctx
     | Input.Inductive (x, t, cs) ->
+       if List.mem x ctx.names then Error.typing ~loc "%s aleardy exists" x ;
        let t = Desugar.desugar ctx t in
        let ctx = Context.add_parameter x t ctx in
        let ctx' = List.fold_left 
-	 (fun c (n, t) -> Context.add_parameter n (Desugar.desugar ctx t)  c) 
+	 (fun c (n, t) -> 
+	  if List.mem n c.names then Error.typing ~loc "%s aleardy exists" x ;
+	  Context.add_parameter n (Desugar.desugar ctx t)  c) 
 	 ctx cs 
        in
        Format.printf "%s is defined@." x ;
