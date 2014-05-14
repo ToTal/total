@@ -47,41 +47,42 @@ let sequence ?(sep="") f lst ppf =
     seq lst
 
 (** [pi xs a ppf] prints abstraction [a] as dependent product using formatter [ppf]. *)
-let rec pi ?max_level xs (x, e1, e2) ppf =
+let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
+  let xs = Context.names ctx in
   if Syntax.occurs 0 e2
   then
     let x = Beautify.refresh x xs in
-      print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr xs e1) (expr (x :: xs) e2)
+      print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (x, e1)) e2)
   else
-    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 xs e1) (expr ("_" :: xs) e2)
+    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Context.extend gamma ("_", e1)) e2)
 
 (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
-and lambda xs (x, e1, e2) ppf =
+and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
   let x =
     if Syntax.occurs 0 e2
-    then Beautify.refresh x xs 
+    then Beautify.refresh x (Context.names ctx)
     else "_"
   in
-    print ~at_level:3 ppf "fun %s :@ %t => %t" x (expr xs e1) (expr (x :: xs) e2)
+    print ~at_level:3 ppf "fun %s :@ %t => %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (x, e1)) e2)
 
 (** [expr ctx e ppf] prints expression [e] using formatter [ppf]. *)
-and expr ?max_level xs e ppf =
-  let rec expr ?max_level xs (e, _) ppf =  expr'?max_level xs e ppf
-  and expr' ?max_level xs e ppf =
+and expr ?max_level (_sigma, gamma as ctx) e ppf =
+  let rec expr ?max_level (e, loc) ppf =  
     let print ?at_level = print ?max_level ?at_level ppf in
       if not (Format.over_max_boxes ()) then
         match e with
-          | Syntax.Var k -> print "%s" (List.nth xs k)
-          | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr xs e)
+          | Syntax.Var k -> print "%s" (Context.lookup_idx_name k gamma ~loc)
+	  | Syntax.Const x -> print "%s" x
+          | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
           | Syntax.Universe u -> print ~at_level:1 "Type %d" u
-          | Syntax.Pi a -> print ~at_level:3 "%t" (pi xs a)
-          | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda xs a)
+          | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
+          | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
           | Syntax.App (e1, e2) ->
-            print ~at_level:1 "%t@ %t" (expr ~max_level:1 xs e1) (expr ~max_level:0 xs e2)
+            print ~at_level:1 "%t@ %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
   in
-    expr ?max_level xs e ppf
+    expr ?max_level e ppf
     
-let expr' xs e ppf = expr xs (Common.nowhere e) ppf
+(* let expr' e ppf = expr (Common.nowhere e) ppf *)
   
 (** Support for printing of errors, warning and debugging information. *)
 

@@ -8,6 +8,7 @@ type universe = int
 type expr = expr' * Common.position
 and expr' =
   | Var of int                   (* de Briujn index *)
+  | Const of Common.variable	 (* something from the signature *)
   | Subst of substitution * expr (* explicit substitution *)
   | Universe of universe
   | Pi of abstraction
@@ -56,6 +57,7 @@ let subst =
       | Dot (a, s), Var 0 -> subst idsubst a
       | Dot (a, s), Var k -> subst s (Var (k - 1), loc)
       | s, Subst (t, e) -> subst s (subst t e)
+      | _, Const x -> e
       | _, Universe _ -> e
       | s, Pi a -> Pi (subst_abstraction s a), loc
       | s, Lambda a -> Lambda (subst_abstraction s a), loc
@@ -71,6 +73,7 @@ let subst =
 let rec occurs k (e, _) =
   match e with
     | Var m -> m = k
+    | Const x -> false
     | Subst (s, e) -> occurs k (subst s e)
     | Universe _ -> false
     | Pi a -> occurs_abstraction k a

@@ -6,10 +6,11 @@ open Context
 (** [norm env e] evaluates expression [e] in environment [env] to a weak head normal form,
     while [norm weak:false env e] evaluates to normal form. *)
 let norm ?(weak=false) =
-  let rec norm ctx ((e', loc) as e) =
+  let rec norm (sigma, gamma as ctx) ((e', loc) as e) =
     match e' with
-      | Var k ->
-        (match lookup_definition k ctx with
+      | Var k -> e
+      | Const x ->
+        (match lookup_definition x sigma with
           | None -> e
           | Some e -> norm ctx e)
       | Universe _ -> e
@@ -21,20 +22,20 @@ let norm ?(weak=false) =
         let (e1', _) as e1 = norm ctx e1 in
           (match e1' with
             | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e)
-            | Var _ | App _ -> 
+            | Var _ | Const _ | App _ -> 
               let e2 = (if weak then e2 else norm ctx e2) in 
                 App (e1, e2), loc
             | Subst _ | Universe _ | Pi _ -> Error.runtime ~loc:(snd e2) "Function expected")
-  and norm_abstraction ctx ((x, t, e) as a) =
+  and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak
     then a
-    else (x, norm ctx t, norm (add_parameter x t ctx) e)
+    else (x, norm ctx t, norm (add_parameter x t sigma, gamma) e)
   in
     norm
 
 (** [nf ctx e] computes the normal form of expression [e]. *)
-let nf = norm ~weak:false
+let nf ctx e = norm ~weak:false ctx e
 
 (** [whnf ctx e] computes the weak head normal form of expression [e]. *)
-let whnf = norm ~weak:true
+let whnf ctx e = norm ~weak:true ctx e
 

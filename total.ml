@@ -77,69 +77,70 @@ let parse parser lex =
   | Failure "lexing: empty token" ->
       Error.syntax ~loc:(Lexer.position_of_lex lex) "unrecognised symbol."
 
-(** [exec_cmd ctx d] executes toplevel directive [d] in context [ctx]. It prints the
+(** [exec_cmd sigma d] executes toplevel directive [d] in context [sigma]. It prints the
     result if in interactive mode, and returns the new context. *)
-let rec exec_cmd interactive ctx (d, loc) =
+let rec exec_cmd interactive sigma (d, loc) =
+  let ctx_from sigma = (sigma, Context.empty_context) in
   match d with
     | Input.Eval e ->
-      let e = Desugar.desugar ctx e in
-      let t = Typing.infer ctx e in
-      let e = Norm.nf ctx e in
+      let e = Desugar.desugar sigma e in
+      let t = Typing.infer (ctx_from sigma) e in
+      let e = Norm.nf (ctx_from sigma) e in
         if interactive then
           Format.printf "    = %t@\n    : %t@."
-            (Print.expr ctx.names e)
-            (Print.expr ctx.names t) ;
-        ctx
+            (Print.expr (ctx_from sigma) e)
+            (Print.expr (ctx_from sigma) t) ;
+        sigma
     | Input.Context ->
       List.iter
         (function
           | (x, Parameter t) ->
-            Format.printf "@[%s : %t@]@." x (Print.expr ctx.names t)
+            Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Definition (t, e)) ->
-            Format.printf "@[%s = %t@]@\n    : %t@." x (Print.expr ctx.names e) (Print.expr ctx.names t))
-        (List.combine ctx.names ctx.decls) ;
-      ctx
+            Format.printf "@[%s = %t@]@\n    : %t@." x (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t))
+	(combine sigma);
+      sigma
     | Input.Parameter (x, t) ->
-      let t = Desugar.desugar ctx t in
-      let _ =  Typing.infer_universe ctx t in
+      let t = Desugar.desugar sigma t in
+      let _ =  Typing.infer_universe (ctx_from sigma) t in
         if interactive then
           Format.printf "%s is assumed.@." x ;
-        add_parameter x t ctx
+        add_parameter x t sigma
     | Input.Definition (x, e) ->
-      if List.mem x ctx.names then Error.typing ~loc "%s already exists" x ;
-      let e = Desugar.desugar ctx e in
-      let t = Typing.infer ctx e in
+      if Context.mem x sigma then Error.typing ~loc "%s already exists" x ;
+      let e = Desugar.desugar sigma e in
+      let t = Typing.infer (ctx_from sigma) e in
         if interactive then
           Format.printf "%s is defined.@." x ;
-        add_definition x t e ctx
+        add_definition x t e sigma
     | Input.Check e ->
-      let e = Desugar.desugar ctx e in
-      let t = Typing.infer ctx e in
-        Format.printf "%t@\n    : %t@." (Print.expr ctx.names e) (Print.expr ctx.names t) ;
-        ctx
+      let e = Desugar.desugar sigma e in
+      let t = Typing.infer (ctx_from sigma) e in
+        Format.printf "%t@\n    : %t@." (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t) ;
+        sigma
     | Input.Inductive (x, t, cs) ->
-       if List.mem x ctx.names then Error.typing ~loc "%s aleardy exists" x ;
-       let t = Desugar.desugar ctx t in
-       let ctx = Context.add_parameter x t ctx in
-       let ctx' = List.fold_left 
+       if Context.mem x sigma then Error.typing ~loc "%s aleardy exists" x ;
+       let t = Desugar.desugar sigma t in
+       let sigma = add_parameter x t sigma in
+       let sigma' = List.fold_left 
 	 (fun c (n, t) -> 
-	  if List.mem n c.names then Error.typing ~loc "%s aleardy exists" x ;
-	  Context.add_parameter n (Desugar.desugar ctx t)  c) 
-	 ctx cs 
+	  if mem n c then Error.typing ~loc "%s aleardy exists" x ;
+	  add_parameter n (Desugar.desugar sigma t)  c) 
+	 sigma cs 
        in
        Format.printf "%s is defined@." x ;
-       ctx'
+       sigma'
     | Input.Help ->
-      print_endline help_text ; ctx
+      print_endline help_text ; sigma
     | Input.Quit -> exit 0
 
 (** Load directives from the given file. *)
-and use_file ctx (filename, interactive) =
+and use_file sigma (filename, interactive) =
   let cmds = Lexer.read_file (parse Parser.directives) filename in
-    List.fold_left (exec_cmd interactive) ctx cmds
+    List.fold_left (exec_cmd interactive) sigma cmds
 
 (** Interactive toplevel *)
-let toplevel ctx =
+let toplevel sigma =
   let eof = match Sys.os_type with
     | "Unix" | "Cygwin" -> "Ctrl-D"
     | "Win32" -> "Ctrl-Z"
@@ -148,11 +149,11 @@ let toplevel ctx =
   print_endline ("total " ^ Version.version);
   print_endline ("[Type " ^ eof ^ " to exit or \"Help.\" for help.]");
   try
-    let ctx = ref ctx in
+    let sigma = ref sigma in
     while true do
       try
         let cmds = Lexer.read_toplevel (parse Parser.directives) () in
-        ctx := List.fold_left (exec_cmd true) !ctx cmds
+        sigma := List.fold_left (exec_cmd true) !sigma cmds
       with
         | Error.Error err -> Print.error err
         | Sys.Break -> prerr_endline "Interrupted."
@@ -188,7 +189,7 @@ let main =
   Format.set_ellipsis_text "..." ;
   try
     (* Run and load all the specified files. *)
-    let ctx = List.fold_left use_file empty_context !files in
-    if !interactive_shell then toplevel ctx
+    let sigma = List.fold_left use_file empty_signature !files in
+    if !interactive_shell then toplevel sigma
   with
     Error.Error err -> Print.error err; exit 1
