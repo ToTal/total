@@ -55,6 +55,7 @@ rule token = parse
 and comments level = parse
   | "*)"                { if level = 0 then token lexbuf else comments (level-1) lexbuf }
   | "(*"                { comments (level+1) lexbuf }
+  | '\n'                { Lexing.new_line lexbuf; comments level lexbuf }
   | _ { comments level lexbuf }
   | eof { print_endline "comments are not closed";
 	  raise End_of_file }
