@@ -148,7 +148,8 @@ let toplevel sigma =
     | "Win32" -> "Ctrl-Z"
     | _ -> "EOF"
   in
-  print_endline ("total " ^ Version.version);
+  print_endline Version.logo;
+  print_endline ("Version: " ^ Version.version);
   print_endline ("[Type " ^ eof ^ " to exit or \"Help.\" for help.]");
   try
     let sigma = ref sigma in
