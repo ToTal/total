@@ -24,3 +24,11 @@ Definition one' := S zero.
 Definition one'' := id Nat one'.
 
 Definition fo := F_z (S Z).
+
+Definition idt := forall A : Type 0, A -> A.
+
+(* Definition id' := (fun (A : Type 0) (x : A) => x) : idt. *)
+
+Axiom axiomatic_id : idt.
+
+Definition fakeZero := axiomatic_id Nat Z.

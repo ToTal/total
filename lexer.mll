@@ -15,7 +15,7 @@
     ("Eval", EVAL) ;
     ("Help", HELP) ;
     ("Quit",  QUIT) ;
-    ("Parameter", PARAMETER) ;
+    ("Axiom", AXIOM);
     ("Context", CONTEXT) ;
     ("Inductive", INDUCTIVE)
   ]

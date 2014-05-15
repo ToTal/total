@@ -13,7 +13,7 @@ let usage = "Usage: total [option] ... [file] ..."
 
 (** The help text printed when [Help.] is used. *)
 let help_text = "Toplevel commands:
-Parameter <ident> : <expr>.    assume variable <ident> has type <expr>
+Axiom <ident> : <expr>.        assume variable <ident> has type <expr>
 Definition <indent> := <expr>. define <ident> to be <expr>
 Check <expr>                   infer the type of expression <expr>
 Eval <expr>.                   normalize expression <expr>
@@ -94,18 +94,20 @@ let rec exec_cmd interactive sigma (d, loc) =
     | Input.Context ->
       List.iter
         (function
-          | (x, Parameter t) ->
+          | (x, Axiom t) ->
+            Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
+          | (x, Constr t) ->
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Definition (t, e)) ->
             Format.printf "@[%s = %t@]@\n    : %t@." x (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t))
 	(combine sigma);
       sigma
-    | Input.Parameter (x, t) ->
+    | Input.Axiom (x, t) ->
       let t = Desugar.desugar sigma t in
       let _ =  Typing.infer_universe (ctx_from sigma) t in
         if interactive then
           Format.printf "%s is assumed.@." x ;
-        add_parameter x t sigma
+        add_axiom x t sigma
     | Input.Definition (x, e) ->
       if Context.mem x sigma then Error.typing ~loc "%s already exists" x ;
       let e = Desugar.desugar sigma e in
@@ -121,11 +123,11 @@ let rec exec_cmd interactive sigma (d, loc) =
     | Input.Inductive (x, t, cs) ->
        if Context.mem x sigma then Error.typing ~loc "%s aleardy exists" x ;
        let t = Desugar.desugar sigma t in
-       let sigma = add_parameter x t sigma in
+       let sigma = add_constr x t sigma in
        let sigma' = List.fold_left 
 	 (fun c (n, t) -> 
 	  if mem n c then Error.typing ~loc "%s aleardy exists" x ;
-	  add_parameter n (Desugar.desugar sigma t)  c) 
+	  add_constr n (Desugar.desugar sigma t)  c) 
 	 sigma cs 
        in
        Format.printf "%s is defined@." x ;

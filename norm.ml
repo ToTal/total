@@ -29,7 +29,7 @@ let norm ?(weak=false) =
   and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak
     then a
-    else (x, norm ctx t, norm (add_parameter x t sigma, gamma) e)
+    else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)
   in
     norm
 

@@ -8,7 +8,8 @@
     A parameter declaration carries its type, while a definition carries the type and
     the defining expression. *)
 type declaration = 
-  | Parameter of Syntax.expr
+  | Axiom of Syntax.expr
+  | Constr of Syntax.expr
   | Definition of Syntax.expr * Syntax.expr
 
 (** A signature consists of a list of names, used for pretty-printing and
@@ -22,16 +23,17 @@ let empty_signature = []
 (** [lookup_ty k ctx] returns the type of [Var k] in signature [ctx]. *)
 let lookup_ty x sigma =
   match List.assoc x sigma with
-    | Parameter t | Definition (t, _) -> t
+    | Axiom t | Constr t | Definition (t, _) -> t
 
 (** [lookup_definition k ctx] returns the definition of [Var k] in signature [ctx]. *)
 let rec lookup_definition x sigma = 
   match List.assoc x sigma with
     | Definition (_, e) -> Some e
-    | Parameter _ -> None
+    | Axiom _ | Constr _ -> None
 
 (** [add_parameter x t ctx] returns [ctx] with the parameter [x] of type [t]. *)
-let add_parameter x t ctx = (x, Parameter t) :: ctx
+let add_axiom x t ctx = (x, Axiom t) :: ctx
+let add_constr x t ctx = (x, Constr t) :: ctx
 
 (** [add_definition x t e ctx] returns [ctx] with [x] of type [t] defined as [e]. *)
 let add_definition x t e ctx = (x, Definition (t, e)) :: ctx

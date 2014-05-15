@@ -23,7 +23,7 @@
 %token LPAREN RPAREN
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP PARAMETER CHECK EVAL CONTEXT DEFINITION INDUCTIVE
+%token QUIT HELP AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE
 %token EOF
 
 %start <Input.directive list> directives
@@ -44,8 +44,8 @@ plain_directive:
     { Quit }
   | HELP
     { Help }
-  | PARAMETER x = NAME COLON e = expr
-    { Parameter (x, e) }
+  | AXIOM x = NAME COLON e = expr
+    { Axiom (x, e) }
   | CHECK e = expr
     { Check e }
   | EVAL e = expr

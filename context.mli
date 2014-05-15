@@ -1,7 +1,8 @@
 (* Signature *)
 
-type declaration =
-    Parameter of Syntax.expr
+type declaration = 
+  | Axiom of Syntax.expr
+  | Constr of Syntax.expr
   | Definition of Syntax.expr * Syntax.expr
 
 type signature
@@ -13,7 +14,8 @@ val lookup_ty : Common.variable -> signature -> Syntax.expr
 val lookup_definition :
   Common.variable -> signature -> Syntax.expr option
 
-val add_parameter : string -> Syntax.expr -> signature -> signature
+val add_axiom : string -> Syntax.expr -> signature -> signature
+val add_constr : string -> Syntax.expr -> signature -> signature
 
 val add_definition :
   string -> Syntax.expr -> Syntax.expr -> signature -> signature

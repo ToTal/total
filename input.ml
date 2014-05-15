@@ -18,7 +18,7 @@ and directive' =
   | Quit
   | Help
   | Context
-  | Parameter of Common.variable * expr
+  | Axiom of Common.variable * expr
   | Definition of Common.variable * expr
   | Check of expr
   | Eval of expr
