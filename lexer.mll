@@ -24,7 +24,7 @@
     Common.Position (Lexing.lexeme_start_p lex, Lexing.lexeme_end_p lex)
 }
 
-let name = ['a'-'z' 'A'-'Z'] ['_' 'a'-'z' 'A'-'Z' '0'-'9' '\'']*
+let name = ['a'-'z' 'A'-'Z'] ['_' '-' 'a'-'z' 'A'-'Z' '0'-'9' '\'']*
 
 let numeral = ['0'-'9']+
 

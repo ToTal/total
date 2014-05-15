@@ -31,6 +31,6 @@ Definition id' := (fun (A : Type 0) (x : A) => x) : idt.
 
 Definition id'' : idt := (fun (A : Type 0) (x : A) => x).
 
-Axiom axiomatic_id : idt.
+Axiom axiomatic-id : idt.
 
-Definition fakeZero := axiomatic_id Nat Z.
+Definition fakeZero := axiomatic-id Nat Z.
