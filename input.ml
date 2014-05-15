@@ -8,6 +8,7 @@ and expr' =
   | Pi of abstraction
   | Lambda of abstraction
   | App of expr * expr
+  | Ann of expr * expr
  
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. *)
 and abstraction = Common.variable * expr * expr
@@ -19,7 +20,7 @@ and directive' =
   | Help
   | Context
   | Axiom of Common.variable * expr
-  | Definition of Common.variable * expr
+  | Definition of Common.variable * expr option * expr
   | Check of expr
   | Eval of expr
   | Inductive of Common.variable * expr * (Common.variable * expr) list

@@ -4,10 +4,12 @@ open Syntax
 open Context
 
 (** [equal ctx e1 e2] determines whether [e1] and [e2] are equal expressions. *)
-let rec equal ctx e1 e2 =
-  let (e1, _) = Norm.whnf ctx e1 in
-  let (e2, _) = Norm.whnf ctx e2 in
+let rec equal ctx e1' e2' =
+  let (e1, _) = Norm.whnf ctx e1' in
+  let (e2, _) = Norm.whnf ctx e2' in
     match e1, e2 with
+      | Ann(e1, _), _ -> equal ctx e1 e2'
+      | _, Ann(e2, _) -> equal ctx e1' e2
       | Var k1, Var k2 -> k1 = k2
       | Const x1, Const x2 -> x1 = x2
       | Universe u1, Universe u2 -> u1 = u2
@@ -44,18 +46,25 @@ let rec infer (sigma, gamma as ctx) (e, loc) =
             (Print.expr ctx t2) (Print.expr ctx s)
         else
           mk_subst (Dot (e2, idsubst)) t
+    | Ann (e1, e2) -> 
+       let t = infer ctx e1 in 
+       if equal ctx t e2 then t else
+	 Error.typing ~loc
+           "this expresion has type@ %t@ but@ %t@ was expected"
+           (Print.expr ctx t) (Print.expr ctx e2)
+
 
 (** [infer_universe ctx t] infers the universe level of type [t] in context [ctx]. *)
 and infer_universe (sigma, gamma as ctx) t =
   let u = infer ctx t in
     match fst (Norm.whnf ctx u) with
       | Universe u -> u
-      | Subst _ | App _ | Var _ | Pi _ |Const _ | Lambda _ ->
+      | Subst _ | App _ | Var _ | Pi _ |Const _ | Lambda _ | Ann _ ->
         Error.typing ~loc:(snd t) "this expression has type@ %t@ but it should be a universe" (Print.expr ctx u)
 
 and infer_pi (sigma, gamma as ctx) e =
   let t = infer ctx e in
     match fst (Norm.whnf ctx t) with
       | Pi a -> a
-      | Subst _ | Var _ | Const _ | App _ | Universe _ | Lambda _ ->
+      | Subst _ | Var _ | Const _ | App _ | Universe _ | Lambda _ | Ann _->
         Error.typing ~loc:(snd e) "this expression has type@ %t@ but it should be a function" (Print.expr ctx t)

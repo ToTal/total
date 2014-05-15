@@ -27,7 +27,9 @@ Definition fo := F_z (S Z).
 
 Definition idt := forall A : Type 0, A -> A.
 
-(* Definition id' := (fun (A : Type 0) (x : A) => x) : idt. *)
+Definition id' := (fun (A : Type 0) (x : A) => x) : idt.
+
+Definition id'' : idt := (fun (A : Type 0) (x : A) => x).
 
 Axiom axiomatic_id : idt.
 

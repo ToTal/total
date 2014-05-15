@@ -79,6 +79,9 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
           | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
           | Syntax.App (e1, e2) ->
             print ~at_level:1 "%t@ %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
+          | Syntax.Ann (e1, e2) ->
+            print ~at_level:1 "%t@ : %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
+
   in
     expr ?max_level e ppf
     

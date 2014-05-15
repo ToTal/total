@@ -13,19 +13,21 @@ let usage = "Usage: total [option] ... [file] ..."
 
 (** The help text printed when [Help.] is used. *)
 let help_text = "Toplevel commands:
-Axiom <ident> : <expr>.        assume variable <ident> has type <expr>
-Definition <indent> := <expr>. define <ident> to be <expr>
-Check <expr>                   infer the type of expression <expr>
-Eval <expr>.                   normalize expression <expr>
-Context.                       print current contex    
-Help.                          print this help
-Quit.                          exit
+Axiom <ident> : <expr>.                 assume variable <ident> has type <expr>
+Definition <indent> := <expr>.          define <ident> to be <expr>
+Definition <indent> : <expr> := <expr>. define <ident> of type <expr> to be <expr>
+Check <expr>                            infer the type of expression <expr>
+Eval <expr>.                            normalize expression <expr>
+Context.                                print current contex    
+Help.                                   print this help
+Quit.                                   exit
 
 Syntax:
-Type k                         the k-th universe, e.g. Type 42
-fun x : e1 => e2               function abstraction
-forall x : e1, e2              dependent product
-e1 e2                          application
+Type k                                  the k-th universe, e.g. Type 42
+fun x : e1 => e2                        function abstraction
+forall x : e1, e2                       dependent product
+e1 e2                                   application
+e1 : e2                                 type annotation
 " ;;
 
 (** A list of files to be loaded and run. *)
@@ -108,13 +110,19 @@ let rec exec_cmd interactive sigma (d, loc) =
         if interactive then
           Format.printf "%s is assumed.@." x ;
         add_axiom x t sigma
-    | Input.Definition (x, e) ->
-      if Context.mem x sigma then Error.typing ~loc "%s already exists" x ;
-      let e = Desugar.desugar sigma e in
-      let t = Typing.infer (ctx_from sigma) e in
-        if interactive then
-          Format.printf "%s is defined.@." x ;
-        add_definition x t e sigma
+    | Input.Definition (x, ann,  e) ->
+       let ctx = ctx_from sigma in
+       if Context.mem x sigma then Error.typing ~loc "%s already exists" x ;
+       let e = Desugar.desugar sigma e in
+       let t = Typing.infer ctx e in
+       (match ann with
+	| None -> ()
+	| Some t' when Typing.equal (ctx_from sigma) (Desugar.desugar sigma t') t -> ()
+	| Some t' -> Error.typing ~loc "%s has type@ %t@ but@ %t@ was expected"
+				 x (Print.expr ctx t) (Print.expr ctx (Desugar.desugar sigma t'))) ;
+       if interactive then
+         Format.printf "%s is defined.@." x ;
+       add_definition x t e sigma
     | Input.Check e ->
       let e = Desugar.desugar sigma e in
       let t = Typing.infer (ctx_from sigma) e in

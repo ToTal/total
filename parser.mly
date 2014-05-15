@@ -50,8 +50,8 @@ plain_directive:
     { Check e }
   | EVAL e = expr
     { Eval e}
-  | DEFINITION x = NAME COLONEQUAL e = expr
-    { Definition (x, e) }
+  | DEFINITION x = NAME t = option(preceded(COLON,expr)) COLONEQUAL e = expr
+    { Definition (x, t, e) }
   | CONTEXT
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
@@ -79,6 +79,8 @@ plain_app_expr:
     { e }
   | TYPE k = NUMERAL
     { Universe k }
+  | e1 = app_expr COLON e2 = simple_expr
+    { Ann (e1, e2) }
   | e1 = app_expr e2 = simple_expr
     { App (e1, e2) }
 

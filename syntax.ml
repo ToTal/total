@@ -14,6 +14,7 @@ and expr' =
   | Pi of abstraction
   | Lambda of abstraction
   | App of expr * expr
+  | Ann of expr * expr
 
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. We also keep around
     the original name [x] of the bound variable for pretty-printing purposes. *)
@@ -62,6 +63,7 @@ let subst =
       | s, Pi a -> Pi (subst_abstraction s a), loc
       | s, Lambda a -> Lambda (subst_abstraction s a), loc
       | s, App (e1, e2) -> App (mk_subst s e1, mk_subst s e2), loc
+      | s, Ann (e1, e2) -> Ann (mk_subst s e1, mk_subst s e2), loc
   and subst_abstraction s (x, e1, e2) =
     let e1 = mk_subst s e1 in
     let e2 = mk_subst (Dot (mk_var 0, compose (Shift 1) s)) e2 in
@@ -79,6 +81,7 @@ let rec occurs k (e, _) =
     | Pi a -> occurs_abstraction k a
     | Lambda a -> occurs_abstraction k a
     | App (e1, e2) -> occurs k e1 || occurs k e2
+    | Ann (e1, e2) -> occurs k e1 || occurs k e2
 
 and occurs_abstraction k (_, e1, e2) =
   occurs k e1 || occurs (k + 1) e2
