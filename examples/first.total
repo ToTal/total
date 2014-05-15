@@ -1,8 +1,15 @@
+(* ToTal example file (* with nested comments! *) *)
+
+(* Inductive comments *)
+
 Inductive Nat : Type 0 := | Z : Nat | S : Nat -> Nat.
 
 Inductive Fin : Nat -> Type 0 := 
 | F_z : forall n : Nat , Fin (S n)
 | F_n : forall n : Nat, Fin n -> Fin (S n).
+
+(* Some definitions using 
+   the inductive types *)
 
 Definition zero := Z.
 
@@ -16,3 +23,4 @@ Definition one' := S zero.
 
 Definition one'' := id Nat one'.
 
+Definition fo := F_z (S Z).

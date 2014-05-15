@@ -49,8 +49,15 @@ rule token = parse
   | "=>"                { DARROW }
   | ":="                { COLONEQUAL }
   | "|"                 { BAR }
+  | "(*"                { comments 0 lexbuf }
   | eof                 { EOF }
 
+and comments level = parse
+  | "*)"                { if level = 0 then token lexbuf else comments (level-1) lexbuf }
+  | "(*"                { comments (level+1) lexbuf }
+  | _ { comments level lexbuf }
+  | eof { print_endline "comments are not closed";
+	  raise End_of_file }
 
 {
   let read_file parser fn =
