@@ -1,8 +1,10 @@
 (* ToTal example file (* with nested comments! *) *)
 
-(* Inductive comments *)
+(* Inductive definitions *)
 
-Inductive Nat : Type 0 := | Z : Nat | S : Nat -> Nat.
+Inductive Nat : Type 0 := 
+| Z : Nat 
+| S : Nat -> Nat.
 
 Inductive Fin : Nat -> Type 0 := 
 | F_z : forall n : Nat , Fin (S n)

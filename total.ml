@@ -131,15 +131,19 @@ let rec exec_cmd interactive sigma (d, loc) =
     | Input.Inductive (x, t, cs) ->
        if Context.mem x sigma then Error.typing ~loc "%s aleardy exists" x ;
        let t = Desugar.desugar sigma t in
-       let sigma = add_constr x t sigma in
-       let sigma' = List.fold_left 
-	 (fun c (n, t) -> 
-	  if mem n c then Error.typing ~loc "%s aleardy exists" x ;
-	  add_constr n (Desugar.desugar sigma t)  c) 
-	 sigma cs 
+       let sigma = Inductive.elab_type_constr sigma x t in
+       let cs = List.fold_left
+       		  (fun cs' (c, t) ->
+       		   if c == x then Error.typing ~loc "constructor %s clashes with type name" c ;
+       		   if List.mem_assoc c cs' then Error.typing ~loc "%s aleardy exists" c ;
+       		   if Context.mem c sigma then Error.typing ~loc "%s aleardy exists" c ;
+       		   (c, Desugar.desugar sigma t)::cs')
+       		  [] cs
        in
-       Format.printf "%s is defined@." x ;
-       sigma'
+       let sigma = Inductive.elab_constrs sigma x t cs in
+       if interactive then
+       	 Format.printf "%s is defined@." x ;
+       sigma
     | Input.Help ->
       print_endline help_text ; sigma
     | Input.Quit -> exit 0

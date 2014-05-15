@@ -24,6 +24,8 @@ val mem : string -> signature -> bool
 
 val combine : signature -> (string * declaration) list
 
+val sig_fold : ('a -> Common.variable * declaration -> 'a) -> 'a -> signature -> 'a
+
 (* Context *)
 
 type 'a ctx

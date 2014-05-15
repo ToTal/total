@@ -42,6 +42,8 @@ let combine sigma = sigma
 
 let mem = List.mem_assoc
 
+let sig_fold = List.fold_left
+
 (** Local context management *)
 
 type 'a ctx =
