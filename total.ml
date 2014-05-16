@@ -147,7 +147,8 @@ let rec exec_cmd interactive sigma (d, loc) =
        		   (c, Desugar.desugar sigma t)::cs')
        		  [] cs
        in
-       let sigma = Inductive.elab_constrs sigma x t cs in
+       let sigma = Inductive.validate_constrs sigma x t cs in
+       let sigma = Inductive.elim sigma x t cs in
        if interactive then
        	 Format.printf "%s is defined@." x ;
        sigma

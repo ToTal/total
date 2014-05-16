@@ -85,3 +85,12 @@ let rec occurs k (e, _) =
 
 and occurs_abstraction k (_, e1, e2) =
   occurs k e1 || occurs (k + 1) e2
+
+(** A telescope returns all the binders (pi abstractions) at the beginning of a type.
+    It returns a function that given a expression, returns a value  *)
+type telescope = (Common.variable * expr) list
+
+let rec get_telescope : expr -> telescope = function
+  | Pi (x, t, e),loc -> (x, t)::(get_telescope e)
+  | _ -> []
+

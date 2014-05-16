@@ -1,0 +1,10 @@
+Inductive Nat : Type 0 := 
+| Z : Nat 
+| S : Nat -> Nat.
+
+Inductive Fin : Nat -> Type 0 := 
+| F_z : forall n : Nat , Fin (S n)
+| F_n : forall n : Nat, Fin n -> Fin (S n).
+
+
+Context.
