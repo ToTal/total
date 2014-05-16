@@ -62,6 +62,13 @@ let options = Arg.align [
   ("-l",
     Arg.String (fun str -> add_file false str),
     "<file> Load <file> into the initial environment");
+  ("--db",
+   Arg.Set Config.pretty_print_db,
+  " Use De Bruinj indices when pretty printing");
+  ("--nm",
+   Arg.Clear Config.pretty_print_db,
+  " Use names when pretty printing (default)");
+
 ]
 
 (** Treat anonymous arguments as files to be run. *)

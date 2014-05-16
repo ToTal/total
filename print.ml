@@ -71,7 +71,7 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
     let print ?at_level = print ?max_level ?at_level ppf in
       if not (Format.over_max_boxes ()) then
         match e with
-          | Syntax.Var k -> print "%s" (Context.lookup_idx_name k gamma ~loc)
+          | Syntax.Var k -> if !Config.pretty_print_db then print "<%d>" k else print "%s" (Context.lookup_idx_name k gamma ~loc)
 	  | Syntax.Const x -> print "%s" x
           | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
           | Syntax.Universe u -> print ~at_level:1 "Type %d" u
