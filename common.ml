@@ -3,8 +3,15 @@
 type name = string
 
 (** Variable names *)
-type variable = name option
+(*              the name      a proposed name for the pprinter *)
+type variable = name option * name option
 
+let none = None, None
+let none_with x = None, Some x
+let some x = Some x, None 
+
+let get_name = fst
+let get_proposed = snd
 
 
 (** Position in source code. For each type in the abstract syntax we define two versions

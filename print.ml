@@ -52,9 +52,9 @@ let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
   if Syntax.occurs 0 e2
   then
     let x = Beautify.refresh x xs in
-      print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (Some x, e1)) e2)
+      print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (Common.some x, e1)) e2)
   else
-    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Context.extend gamma (None, e1)) e2)
+    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Context.extend gamma (Common.none, e1)) e2)
 
 (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
 and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
@@ -63,7 +63,11 @@ and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
     then Beautify.refresh x (Context.names ctx)
     else "_"
   in
-    print ~at_level:3 ppf "fun %s :@ %t => %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (Some x, e1)) e2)
+    print ~at_level:3 ppf 
+	  "fun %s :@ %t => %t" 
+	  x 
+	  (expr ctx e1) 
+	  (expr (sigma, Context.extend gamma (Common.some x, e1)) e2)
 
 (** [expr ctx e ppf] prints expression [e] using formatter [ppf]. *)
 and expr ?max_level (_sigma, gamma as ctx) e ppf =
@@ -74,7 +78,7 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
           | Syntax.Var k -> 
 	     if !Config.pretty_print_db 
 	     then print "<%d>" k 
-	     else (match (Context.lookup_idx_name k gamma ~loc) with
+	     else (match Common.get_name (Context.lookup_idx_name k gamma ~loc) with
 		   | None -> Error.violation "Expected a named variable"
 		   | Some x -> print "%s" x)
 	  | Syntax.Const x -> print "%s" x

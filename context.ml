@@ -71,20 +71,21 @@ type cctx = (Common.variable * Syntax.expr) ctx
 let index ~loc x =
   let rec index k = function
     | Empty                -> Error.scoping ~loc "unknown identifier %s" x
-    | Cons (gamma, (Some y, _)) -> if x = y then k else index (k + 1) gamma
-    | Cons (gamma, (None, _)) -> index (k + 1) gamma
+    | Cons (gamma, (y, _)) -> 
+       match Common.get_name y with 
+	 Some y when x = y -> k
+       | _ -> index (k + 1) gamma
   in
   index 0
 
 let rec lookup_idx_ty ~loc k gamma = Syntax.shift (k+1) (snd (lookup_idx ~loc k gamma))
 
-let rec lookup_idx_name ~loc k gamma = fst (lookup_idx ~loc k gamma)
+let rec lookup_idx_name ~loc k gamma = (fst (lookup_idx ~loc k gamma))
 
 (** Signature and context functions *)
 
 let names (sigma, gamma : signature * cctx) : string list = 
   (List.map fst sigma) @ 
-    List.map (function (Some x) -> x | _ -> Error.violation "This cannot happen")
-    (List.filter 
-       (function |Some _ -> true | _ -> false) 
-       (ctx_fold (fun ns (n,_) -> n::ns) [] gamma))
+       (ctx_fold 
+	  (fun ns (n,_) -> match Common.get_name n with | Some n -> n::ns |_ -> ns)
+	  [] gamma)

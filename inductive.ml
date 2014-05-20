@@ -46,7 +46,7 @@ let elim sigma d t cs =
   (* x : D Θ *)
   let vars_for_tel = List.mapi (fun n _ -> nw (Var (ty_tel_length - 1 - n))) ty_tel in
   let d_Theta = List.fold_left (fun e v -> nw(App (e, v))) (nw (Const d)) vars_for_tel in
-  let target = (Some d, d_Theta) :: ty_tel in
+  let target = (Common.some d, d_Theta) :: ty_tel in
 
 
 

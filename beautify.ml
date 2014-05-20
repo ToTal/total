@@ -17,12 +17,15 @@ let split s =
 (** Given a variable [x] and a list of variable names [xs], find a variant of [x] which
     does not appear in [xs]. *)
 let refresh x xs = 
-  match x with
-  | None when not (List.mem "_" xs) -> "_"
+  let n = match Common.get_proposed x with 
+    | Some x -> x | _ -> "_" 
+  in
+  match Common.get_name x with
+  | None when not (List.mem n xs) -> n
   | None -> 
      let k = ref 0 in
-     while List.mem ("_" ^ string_of_int !k) xs do incr k done ;
-     "x" ^ string_of_int !k
+     while List.mem (n ^ string_of_int !k) xs do incr k done ;
+     n ^ string_of_int !k
   | Some x when not (List.mem x xs)-> x
   | Some x ->
      let (y, k) = split x in
