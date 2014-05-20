@@ -18,4 +18,5 @@ let syntax ~loc msg = error ~loc "Syntax error" msg
 let scoping ~loc msg = error ~loc "Scoping error" msg
 let typing ~loc msg = error ~loc "Typing error" msg
 let runtime ~loc msg = error ~loc "Normalization error" msg
+let violation msg = error ~loc:(Common.Nowhere) "Violation error" msg
 let exc ~loc msg = error ~loc "Exception" msg

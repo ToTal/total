@@ -15,7 +15,7 @@ type declaration =
 (** A signature consists of a list of names, used for pretty-printing and
     desugaring of variable names to de Bruijn indices, and a list of
     declarations. *)
-type signature = (Common.variable * declaration) list
+type signature = (Common.name * declaration) list
 
 (** On the zeroth day there was the empty signature. *)
 let empty_signature = []
@@ -71,7 +71,8 @@ type cctx = (Common.variable * Syntax.expr) ctx
 let index ~loc x =
   let rec index k = function
     | Empty                -> Error.scoping ~loc "unknown identifier %s" x
-    | Cons (gamma, (y, _)) -> if x = y then k else index (k + 1) gamma
+    | Cons (gamma, (Some y, _)) -> if x = y then k else index (k + 1) gamma
+    | Cons (gamma, (None, _)) -> index (k + 1) gamma
   in
   index 0
 
@@ -81,4 +82,9 @@ let rec lookup_idx_name ~loc k gamma = fst (lookup_idx ~loc k gamma)
 
 (** Signature and context functions *)
 
-let names (sigma, gamma) = (List.map fst sigma) @ (ctx_fold (fun ns (n,_) -> n::ns) [] gamma)
+let names (sigma, gamma : signature * cctx) : string list = 
+  (List.map fst sigma) @ 
+    List.map (function (Some x) -> x | _ -> Error.violation "This cannot happen")
+    (List.filter 
+       (function |Some _ -> true | _ -> false) 
+       (ctx_fold (fun ns (n,_) -> n::ns) [] gamma))

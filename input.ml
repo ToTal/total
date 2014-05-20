@@ -3,7 +3,7 @@
 (** Abstract syntax of expressions as given by the user. *)
 type expr = expr' * Common.position
 and expr' =
-  | Var of Common.variable
+  | Var of Common.name
   | Universe of int
   | Pi of abstraction
   | Lambda of abstraction
@@ -19,8 +19,8 @@ and directive' =
   | Quit
   | Help
   | Context
-  | Axiom of Common.variable * expr
-  | Definition of Common.variable * expr option * expr
+  | Axiom of Common.name * expr
+  | Definition of Common.name * expr option * expr
   | Check of expr
   | Eval of expr
-  | Inductive of Common.variable * expr * (Common.variable * expr) list
+  | Inductive of Common.name * expr * (Common.name * expr) list

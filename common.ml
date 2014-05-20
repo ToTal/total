@@ -1,7 +1,11 @@
 (** Definitions in common use *)
 
+type name = string
+
 (** Variable names *)
-type variable = string
+type variable = name option
+
+
 
 (** Position in source code. For each type in the abstract syntax we define two versions
     [t] and [t']. The former is the latter with a position tag. For example, [expr = expr'

@@ -71,7 +71,7 @@ plain_expr:
   | FUN lst = abstraction DARROW e = expr
     { fst (make_lambda e lst) }
   | t1 = app_expr ARROW t2 = expr
-    { Pi ("_", t1, t2) }
+    { Pi (None, t1, t2) }
 
 app_expr: mark_position(plain_app_expr) { $1 }
 plain_app_expr:
@@ -100,7 +100,7 @@ abstraction:
 bind1: mark_position(plain_bind1) { $1 }
 plain_bind1:
   | xs = nonempty_list(NAME) COLON t = expr
-    { (xs, t) }
+    { (List.map (fun x-> Some x) xs, t) }
 
 binds:
   | LPAREN b = bind1 RPAREN

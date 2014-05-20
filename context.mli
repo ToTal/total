@@ -9,22 +9,22 @@ type signature
 
 val empty_signature : signature
 
-val lookup_ty : Common.variable -> signature -> Syntax.expr
+val lookup_ty : Common.name -> signature -> Syntax.expr
 
 val lookup_definition :
-  Common.variable -> signature -> Syntax.expr option
+  Common.name -> signature -> Syntax.expr option
 
-val add_axiom : string -> Syntax.expr -> signature -> signature
-val add_constr : string -> Syntax.expr -> signature -> signature
+val add_axiom : Common.name -> Syntax.expr -> signature -> signature
+val add_constr : Common.name -> Syntax.expr -> signature -> signature
 
 val add_definition :
-  string -> Syntax.expr -> Syntax.expr -> signature -> signature
+  Common.name -> Syntax.expr -> Syntax.expr -> signature -> signature
 
 val mem : string -> signature -> bool
 
 val combine : signature -> (string * declaration) list
 
-val sig_fold : ('a -> Common.variable * declaration -> 'a) -> 'a -> signature -> 'a
+val sig_fold : ('a -> Common.name * declaration -> 'a) -> 'a -> signature -> 'a
 
 (* Context *)
 
@@ -34,7 +34,7 @@ val extend : 'a ctx -> 'a -> 'a ctx
 val lookup_idx : loc:Common.position -> int -> 'a ctx -> 'a
 val ctx_fold : ('a -> 'b -> 'a) -> 'a -> 'b ctx -> 'a
 type cctx = (Common.variable * Syntax.expr) ctx
-val index : loc:Common.position -> string -> (string * 'a) ctx -> int
+val index : loc:Common.position -> Common.name -> cctx -> int
 val lookup_idx_ty : loc:Common.position -> int -> cctx -> Syntax.expr
 val lookup_idx_name : loc:Common.position -> int -> cctx -> Common.variable
 

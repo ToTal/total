@@ -23,9 +23,9 @@ let rec constructs_type x = function
 let positive t x = true 	(* TODO implement this! *)
 
 let validate_constrs (sigma : Context.signature) 
-		 (x : Common.variable) 
+		 (x : Common.name) 
 		 (t : Syntax.expr) 
-		 (cs : (Common.variable * Syntax.expr) list) =
+		 (cs : (Common.name * Syntax.expr) list) =
   let elab sigma (c, t) = 
     let ctx = ctx_from sigma in
     if not (constructs_type x t) then
@@ -46,7 +46,7 @@ let elim sigma d t cs =
   (* x : D Θ *)
   let vars_for_tel = List.mapi (fun n _ -> nw (Var (ty_tel_length - 1 - n))) ty_tel in
   let d_Theta = List.fold_left (fun e v -> nw(App (e, v))) (nw (Const d)) vars_for_tel in
-  let target = (d, d_Theta) :: ty_tel in
+  let target = (Some d, d_Theta) :: ty_tel in
 
 
 

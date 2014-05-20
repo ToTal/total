@@ -8,7 +8,7 @@ type universe = int
 type expr = expr' * Common.position
 and expr' =
   | Var of int                   (* de Briujn index *)
-  | Const of Common.variable	 (* something from the signature *)
+  | Const of Common.name	 (* something from the signature *)
   | Subst of substitution * expr (* explicit substitution *)
   | Universe of universe
   | Pi of abstraction
@@ -30,7 +30,7 @@ let mk_var k = Common.nowhere (Var k)
 let mk_subst s e = Common.nowhere (Subst (s, e))
 let mk_universe u = Common.nowhere (Universe u)
 let mk_pi a = Common.nowhere (Pi a)
-let mk_arrow s t = mk_pi ("_", s, t)
+let mk_arrow s t = mk_pi (None, s, t)
 let mk_lambda a = Common.nowhere (Lambda a)
 let mk_app e1 e2 = Common.nowhere (App (e1, e2))
 
