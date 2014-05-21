@@ -4,7 +4,7 @@ Inductive Nat : Type 0 :=
 
 Inductive Fin : Nat -> Type 0 := 
 | F_z : forall n : Nat , Fin (S n)
-| F_n : forall n : Nat, Fin n -> Fin (S n).
+| F_s : forall n : Nat, Fin n -> Fin (S n).
 
 
 Context.
