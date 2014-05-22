@@ -1,8 +1,9 @@
 open Syntax
 
-let rec is_kind = function 
+let rec is_kind c = function 
   | Universe _, _ -> true
-  | Pi (_,_, e),_ -> is_kind e
+  | Pi (_,_, e),_ -> is_kind c e
+  | Subst _ as e, l -> is_kind c (Norm.whnf c (e, l))
   | _, _ -> false
 
 let ctx_from sigma = (sigma, Context.empty_context)
@@ -10,7 +11,7 @@ let ctx_from sigma = (sigma, Context.empty_context)
 let elab_type_constr sigma x t =
   let ctx = ctx_from sigma in
   let _ = Typing.infer ctx t in
-  if not (is_kind t) then
+  if not (is_kind ctx t) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
   Context.add_constr x t sigma
 
@@ -29,12 +30,17 @@ let validate_constrs (sigma : Context.signature)
   let elab sigma (c, t) = 
     let ctx = ctx_from sigma in
     if not (constructs_type x t) then
-      Error.typing ~loc:(snd t) "constructor %s does not construct type %s (%t )" c x (Print.expr ctx t) ;
-    if not (is_kind (Typing.infer ctx t)) then
-      Error.typing ~loc:(snd t) "constructor %s does not construct a  type (%t)" c (Print.expr ctx t) ;
+      Error.typing ~loc:(snd t) 
+		   "constructor %s does not construct type %s (%t )" 
+		   c x (Print.expr ctx t) ;
+    let k = Typing.infer ctx t in
+    if not (is_kind ctx k)then
+      Error.typing ~loc:(snd t)
+    		   "constructor %s does not construct a type (%t has type %t)"
+    		   c (Print.expr ctx t) (Print.expr ctx k) ;
     if not (positive t x) then
       Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
-    let sigma = Context.add_constr c t sigma in
+    (* let sigma = Context.add_constr c t sigma in *)
     Context.add_constr c t sigma
   in
   List.fold_left elab sigma cs
