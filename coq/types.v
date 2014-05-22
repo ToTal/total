@@ -14,8 +14,8 @@ Inductive Fin : Nat -> Set :=
 .
 
 Print Fin.
-Print Fin_rec.
-Print Nat_rec.
+Print Fin_rect.
+Print Nat_rect.
 
 Inductive B : Set := TT : B | FF: B.
 
