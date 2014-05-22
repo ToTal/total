@@ -49,7 +49,7 @@ let sequence ?(sep="") f lst ppf =
 (** [pi xs a ppf] prints abstraction [a] as dependent product using formatter [ppf]. *)
 let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
   let xs = Context.names ctx in
-  if Syntax.occurs 0 e2
+  if Syntax.occurs 0 e2 || (not !Config.pretty_print_arrow)
   then
     let x = Beautify.refresh x xs in
       print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Context.extend gamma (Common.some x, e1)) e2)

@@ -68,7 +68,12 @@ let options = Arg.align [
   ("--nm",
    Arg.Clear Config.pretty_print_db,
   " Use names when pretty printing (default)");
-
+  ("--arron",
+   Arg.Set Config.pretty_print_arrow,
+  " Use -> for non-dependent function types when pretty printing (default)");
+  ("--arroff",
+   Arg.Clear Config.pretty_print_arrow,
+  " Use forall for non-dependent function types when pretty printing");
 ]
 
 (** Treat anonymous arguments as files to be run. *)
