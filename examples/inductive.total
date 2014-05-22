@@ -2,9 +2,21 @@ Inductive Nat : Type 0 :=
 | Z : Nat 
 | S : Nat -> Nat.
 
+Axiom plus : Nat -> Nat -> Nat. (* TODO : waiting for eliminators *)
+
 Inductive Fin : Nat -> Type 0 := 
 | F_z : forall n : Nat , Fin (S n)
 | F_s : forall n : Nat, Fin n -> Fin (S n).
 
+Inductive B : Type 0 := | TT : B | FF : B.
 
+Inductive Tree : Type 0 := 
+| Empty : Tree
+| Node : B -> Tree -> Tree -> Tree.
+
+Inductive DTree : Nat -> Type 0 :=
+| DEmpty : DTree Z
+| DNode : forall n : Nat, forall m : Nat, DTree n -> DTree m -> DTree (plus m n).
+
+  
 Context.
