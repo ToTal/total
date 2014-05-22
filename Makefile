@@ -1,13 +1,32 @@
-default: native
+#DEBUG = true
+#PROFILE = true
+#WARN_PATTERN = true
+#VERBOSE = 0
 
-native:
-	ocamlbuild  total.native
+PARALLEL = 4
 
-byte:
-	ocamlbuild total.byte
 
-clean:
-	ocamlbuild -clean
+EXT = $(if $(BYTE),byte,native)
+
+OCAMLBUILD = ocamlbuild -use-ocamlfind \
+        $(if $(PARALLEL),-j $(PARALLEL),) \
+        $(if $(PROFILE),-tag profile,) \
+        $(if $(DEBUG),-tag debug,) \
+        $(if $(VERBOSE),-verbose $(VERBOSE),) \
+        $(if $(WARN_PATTERN),-tag warn\(P\) -tag warn-error\(p\),)
+
+.PHONY: all clean
+
+all : total
+
+total:
+	$(OCAMLBUILD)  total.$(EXT)
 
 doc:
-	ocamlbuild -docflag -keep-code total.docdir/index.html
+	$(OCAMLBUILD) -docflag -keep-code total.docdir/index.html
+
+clean:
+	$(OCAMLBUILD) -clean
+
+%:
+	$(OCAMLBUILD) $@
