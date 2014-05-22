@@ -2,6 +2,9 @@
 
 open Syntax
 
+(** default generated name *)
+let default = "_n"
+
 (** Split a variable name into base and numerical postfix, e.g.,
    ["x42"] is split into [("x", 42)]. *)
 let split s =
@@ -18,7 +21,7 @@ let split s =
     does not appear in [xs]. *)
 let refresh x xs = 
   let n = match Common.get_proposed x with 
-    | Some x -> x | _ -> "_" 
+    | Some x -> x | _ -> default
   in
   match Common.get_name x with
   | None when not (List.mem n xs) -> n
