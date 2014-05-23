@@ -12,6 +12,7 @@ let some x = Some x, ref ()
 
 let get_name = fst
 
+let eq (_, r1) (_,r2) = r1 == r2
 
 (** Position in source code. For each type in the abstract syntax we define two versions
     [t] and [t']. The former is the latter with a position tag. For example, [expr = expr'

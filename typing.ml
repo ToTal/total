@@ -11,12 +11,13 @@ let rec equal ctx e1' e2' =
       | Ann(e1, _), _ -> equal ctx e1 e2'
       | _, Ann(e2, _) -> equal ctx e1' e2
       | Var k1, Var k2 -> k1 = k2
+      | Free v1, Free v2 -> Common.eq v2 v2
       | Const x1, Const x2 -> x1 = x2
       | Universe u1, Universe u2 -> u1 = u2
       | Pi a1, Pi a2 -> equal_abstraction ctx a1 a2
       | Lambda a1, Lambda a2 -> equal_abstraction ctx a1 a2
       | App (n1, e1), App (n2, e2) -> equal ctx n1 n2 && equal ctx e1 e2
-      | (Var _ | Const _ | Universe _ | Pi _ | Lambda _ | App _ | Subst _), _ -> false
+      | (Var _ | Free _ | Const _ | Universe _ | Pi _ | Lambda _ | App _ | Subst _), _ -> false
 
 and equal_abstraction (sigma, gamma as ctx) (x, e1, e2) (_, e1', e2') =
   equal ctx e1 e1' && equal (sigma, Ctx.extend gamma (x, e1)) e2 e2'
@@ -25,6 +26,7 @@ and equal_abstraction (sigma, gamma as ctx) (x, e1, e2) (_, e1', e2') =
 let rec infer (sigma, gamma as ctx) (e, loc) =
   match e with
     | Var k -> Ctx.lookup_idx_ty ~loc k gamma
+    | Free v -> Error.violation ~loc "Cannot infer the type of a free variable"
     | Const x -> lookup_ty x sigma
     | Universe u -> mk_universe (u + 1)
     | Pi (x, e1, e2) ->
@@ -59,12 +61,12 @@ and infer_universe (sigma, gamma as ctx) t =
   let u = infer ctx t in
     match fst (Norm.whnf ctx u) with
       | Universe u -> u
-      | Subst _ | App _ | Var _ | Pi _ |Const _ | Lambda _ | Ann _ ->
+      | Subst _ | App _ | Var _ | Free _ | Pi _ |Const _ | Lambda _ | Ann _ ->
         Error.typing ~loc:(snd t) "this expression has type@ %t@ but it should be a universe" (Print.expr ctx u)
 
 and infer_pi (sigma, gamma as ctx) e =
   let t = infer ctx e in
     match fst (Norm.whnf ctx t) with
       | Pi a -> a
-      | Subst _ | Var _ | Const _ | App _ | Universe _ | Lambda _ | Ann _->
+      | Subst _ | Var _ | Free _ | Const _ | App _ | Universe _ | Lambda _ | Ann _->
         Error.typing ~loc:(snd e) "this expression has type@ %t@ but it should be a function" (Print.expr ctx t)

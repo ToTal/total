@@ -81,6 +81,10 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
 	     else (match Common.get_name (Ctx.lookup_idx_name k gamma ~loc) with
 		   | None -> Error.violation "Expected a named variable"
 		   | Some x -> print "%s" x)
+	  | Syntax.Free v ->
+	     (match Common.get_name v with
+	      | None -> print "<free var>"
+	      | Some x -> print "<free var %s>" x)
 	  | Syntax.Const x -> print "%s" x
           | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
           | Syntax.Universe u -> print ~at_level:1 "Type %d" u

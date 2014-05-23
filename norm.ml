@@ -9,6 +9,7 @@ let norm ?(weak=false) =
   let rec norm (sigma, gamma as ctx) ((e', loc) as e) =
     match e' with
       | Var k -> e
+      | Free _ -> e		
       | Const x ->
         (match lookup_definition x sigma with
           | None -> e
@@ -24,11 +25,13 @@ let norm ?(weak=false) =
         let (e1', _) as e1 = norm ctx e1 in
           (match e1' with
             | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e)
-            | Var _ | Const _ | App _ -> 
+            | Var _ | Free _ | Const _ | App _ -> 
               let e2 = (if weak then e2 else norm ctx e2) in 
                 App (e1, e2), loc
-	    | Ann (e1, t) -> norm ctx (App (e1, e2), loc) (* This removes the annotation, is this correct? *)
-            | Subst _ | Universe _ | Pi _ -> Error.runtime ~loc:(snd e2) "Function expected")
+	    (* This removes the annotation, is this correct? *)
+	    | Ann (e1, t) -> norm ctx (App (e1, e2), loc) 
+            | Subst _ | Universe _ | Pi _ -> Error.runtime ~loc:(snd e1) "Function expected")
+
   and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak
     then a
