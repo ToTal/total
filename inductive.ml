@@ -6,14 +6,14 @@ let rec is_kind c = function
   | Subst _ as e, l -> is_kind c (Norm.whnf c (e, l))
   | _, _ -> false
 
-let ctx_from sigma = (sigma, Context.empty_context)
+let ctx_from sigma = (sigma, Ctx.empty_context)
 
 let elab_type_constr sigma x t =
   let ctx = ctx_from sigma in
   let _ = Typing.infer ctx t in
   if not (is_kind ctx t) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
-  Context.add_constr x t sigma
+  Ctx.add_constr x t sigma
 
 let rec constructs_type x = function
   | Pi (_,_,e),_ -> constructs_type x e
@@ -23,7 +23,7 @@ let rec constructs_type x = function
 
 let positive t x = true 	(* TODO implement this! *)
 
-let validate_constrs (sigma : Context.signature) 
+let validate_constrs (sigma : Ctx.signature) 
 		 (x : Common.name) 
 		 (t : Syntax.expr) 
 		 (cs : (Common.name * Syntax.expr) list) =
@@ -40,7 +40,7 @@ let validate_constrs (sigma : Context.signature)
     		   c (Print.expr ctx t) (Print.expr ctx k) ;
     if not (positive t x) then
       Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
-    Context.add_constr c t sigma
+    Ctx.add_constr c t sigma
   in
   List.fold_left elab sigma cs
 
@@ -98,7 +98,7 @@ let method_ty sigma d t c p_idx =
 (*     final_tel *)
 (*   in *)
 
-(*   Context.add_constr (d^"-elim") elim_ty sigma *)
+(*   Ctx.add_constr (d^"-elim") elim_ty sigma *)
 
 
-let elim sigma d t cs = Context.add_constr (d^"-elim") (nw (Universe 1729)) sigma 
+let elim sigma d t cs = Ctx.add_constr (d^"-elim") (nw (Universe 1729)) sigma 

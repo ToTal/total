@@ -1,7 +1,7 @@
 (** Normalization of expressions. *)
 
 open Syntax
-open Context
+open Ctx
 
 (** [norm env e] evaluates expression [e] in environment [env] to a weak head normal form,
     while [norm weak:false env e] evaluates to normal form. *)

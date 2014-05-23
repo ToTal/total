@@ -1,7 +1,7 @@
 (** Type inference. *)
 
 open Syntax
-open Context
+open Ctx
 
 (** [equal ctx e1 e2] determines whether [e1] and [e2] are equal expressions. *)
 let rec equal ctx e1' e2' =
@@ -19,22 +19,22 @@ let rec equal ctx e1' e2' =
       | (Var _ | Const _ | Universe _ | Pi _ | Lambda _ | App _ | Subst _), _ -> false
 
 and equal_abstraction (sigma, gamma as ctx) (x, e1, e2) (_, e1', e2') =
-  equal ctx e1 e1' && equal (sigma, Context.extend gamma (x, e1)) e2 e2'
+  equal ctx e1 e1' && equal (sigma, Ctx.extend gamma (x, e1)) e2 e2'
 
 (** [infer ctx e] infers the type of expression [e] in context [ctx]. *)
 let rec infer (sigma, gamma as ctx) (e, loc) =
   match e with
-    | Var k -> Context.lookup_idx_ty ~loc k gamma
+    | Var k -> Ctx.lookup_idx_ty ~loc k gamma
     | Const x -> lookup_ty x sigma
     | Universe u -> mk_universe (u + 1)
     | Pi (x, e1, e2) ->
       let u1 = infer_universe ctx e1 in
-      let u2 = infer_universe (sigma, Context.extend gamma (x, e1)) e2 in
+      let u2 = infer_universe (sigma, Ctx.extend gamma (x, e1)) e2 in
         mk_universe (max u1 u2)
     | Subst (s, e) -> infer ctx (Syntax.subst s e)
     | Lambda (x, e1, e2) ->
       let _ = infer_universe ctx e1 in
-      let t2 = infer (sigma, Context.extend gamma (x, e1)) e2 in
+      let t2 = infer (sigma, Ctx.extend gamma (x, e1)) e2 in
         mk_pi (x, e1, t2)
     | App (e1, e2) ->
       let (x, s, t) = infer_pi ctx e1 in

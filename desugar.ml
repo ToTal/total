@@ -6,10 +6,10 @@ let desugar sigma =
   let rec desugar gamma (e, loc) =
     (match e with
       | Input.Var x ->
-	 if Context.mem x sigma then
+	 if Ctx.mem x sigma then
 	   Syntax.Const x
 	 else
-	   Syntax.Var (Context.index ~loc x gamma)
+	   Syntax.Var (Ctx.index ~loc x gamma)
       | Input.Universe u -> Syntax.Universe u
       | Input.Pi a -> Syntax.Pi (desugar_abstraction gamma a)
       | Input.Lambda a -> Syntax.Lambda (desugar_abstraction gamma a)
@@ -18,7 +18,7 @@ let desugar sigma =
     loc
   and desugar_abstraction gamma (x, t, e) =
     let t = desugar gamma t in
-    (x, t, desugar (Context.extend gamma (x, t)) e)
+    (x, t, desugar (Ctx.extend gamma (x, t)) e)
   in
-    desugar Context.empty_context
+    desugar Ctx.empty_context
 

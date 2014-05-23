@@ -1,6 +1,6 @@
 (** Toplevel. *)
 
-open Context
+open Ctx
 
 (** Should the interactive shell be run? *)
 let interactive_shell = ref true
@@ -94,7 +94,7 @@ let parse parser lex =
 (** [exec_cmd sigma d] executes toplevel directive [d] in context [sigma]. It prints the
     result if in interactive mode, and returns the new context. *)
 let rec exec_cmd interactive sigma (d, loc) =
-  let ctx_from sigma = (sigma, Context.empty_context) in
+  let ctx_from sigma = (sigma, Ctx.empty_context) in
   match d with
     | Input.Eval e ->
       let e = Desugar.desugar sigma e in
@@ -124,7 +124,7 @@ let rec exec_cmd interactive sigma (d, loc) =
         add_axiom x t sigma
     | Input.Definition (x, ann,  e) ->
        let ctx = ctx_from sigma in
-       if Context.mem x sigma then Error.typing ~loc "%s already exists" x ;
+       if Ctx.mem x sigma then Error.typing ~loc "%s already exists" x ;
        let e = Desugar.desugar sigma e in
        let t = Typing.infer ctx e in
        (match ann with
@@ -141,14 +141,14 @@ let rec exec_cmd interactive sigma (d, loc) =
         Format.printf "%t@\n    : %t@." (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t) ;
         sigma
     | Input.Inductive (x, t, cs) ->
-       if Context.mem x sigma then Error.typing ~loc "%s aleardy exists" x ;
+       if Ctx.mem x sigma then Error.typing ~loc "%s aleardy exists" x ;
        let t = Desugar.desugar sigma t in
        let sigma = Inductive.elab_type_constr sigma x t in
        let cs = List.fold_left
        		  (fun cs' (c, t) ->
        		   if c == x then Error.typing ~loc "constructor %s clashes with type name" c ;
        		   if List.mem_assoc c cs' then Error.typing ~loc "%s aleardy exists" c ;
-       		   if Context.mem c sigma then Error.typing ~loc "%s aleardy exists" c ;
+       		   if Ctx.mem c sigma then Error.typing ~loc "%s aleardy exists" c ;
        		   (c, Desugar.desugar sigma t)::cs')
        		  [] cs
        in

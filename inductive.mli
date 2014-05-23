@@ -1,20 +1,20 @@
-val elab_type_constr : Context.signature 
+val elab_type_constr : Ctx.signature 
 		       -> Common.name
 		       -> Syntax.expr 
 		       (* -> (Common.variable * Syntax.expr) list  *)
-		       -> Context.signature
+		       -> Ctx.signature
 
-val validate_constrs : Context.signature 
+val validate_constrs : Ctx.signature 
 		       -> Common.name
 		       -> Syntax.expr 
 		       -> (Common.name * Syntax.expr) list
-		       -> Context.signature
+		       -> Ctx.signature
 
-val elim : Context.signature 
+val elim : Ctx.signature 
 	   -> Common.name
 	   -> Syntax.expr 
 	   -> (Common.name * Syntax.expr) list
-	   -> Context.signature
+	   -> Ctx.signature
 
 
 
