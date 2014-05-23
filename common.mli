@@ -9,7 +9,6 @@ val none_with : name -> variable
 val some : name -> variable
 
 val get_name : variable -> name option
-val get_proposed : variable -> name option
 
 type position = Position of Lexing.position * Lexing.position | Nowhere
 
