@@ -90,7 +90,9 @@ and occurs_abstraction k (_, e1, e2) =
     It returns a function that given a expression, returns a value  *)
 type telescope = (Common.variable * expr) list
 
-let rec get_telescope : expr -> telescope = function
-  | Pi (x, t, e),loc -> (x, t)::(get_telescope e)
-  | _ -> []
+let rec get_telescope : expr -> telescope * expr = function
+  | Pi (x, t, e),loc -> 
+     let tel, rest = get_telescope e in
+     (x, t)::tel, rest
+  | rest -> [], rest
 

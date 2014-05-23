@@ -40,22 +40,65 @@ let validate_constrs (sigma : Context.signature)
     		   c (Print.expr ctx t) (Print.expr ctx k) ;
     if not (positive t x) then
       Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
-    (* let sigma = Context.add_constr c t sigma in *)
     Context.add_constr c t sigma
   in
   List.fold_left elab sigma cs
 
-let elim sigma d t cs = 
-  let nw = Common.nowhere in
-  (* telescope of the type constructor *)
-  let ty_tel = get_telescope t in let ty_tel_length = List.length ty_tel in
-  (* x : D Θ *)
-  let vars_for_tel = List.mapi (fun n _ -> nw (Var (ty_tel_length - 1 - n))) ty_tel in
-  let d_Theta = List.fold_left (fun e v -> nw(App (e, v))) (nw (Const d)) vars_for_tel in
-  let target = (Common.some d, d_Theta) :: ty_tel in
+let nw = Common.nowhere
+(** Computes the induction hypothesis *)
+let motive_ty sigma d t = 
+  let params,_ = get_telescope t in let param_len = List.length params in
+  let vars = List.mapi (fun n _ -> nw (Var (param_len - 1 - n))) params in
+  let d = List.fold_left (fun e v -> nw (App (e, v))) (nw (Const d)) vars in
+  List.fold_left 
+    (fun v (x, t) -> nw(Pi (x, t, v))) 
+    (nw (Universe 0)) 
+    ((Common.none_with "D", d)::params)
+
+let method_ty sigma d t c p_idx = 
+  (* All the constructor's parameters *)
+  let constr_tel,_ = get_telescope c in
+  let constr_tel_shift = List.length constr_tel in
+
+  (* The parameters that represent a recursive call *)
+  let recs = List.filter (fun (x, t) -> false) constr_tel in
+
+  let rec_call p_idx' = List.mapi 
+		     (fun n (x, t) -> 
+		      let p = nw (Var (p_idx' + n)) in
+		      (Common.none_with "r", p))
+		     recs 
+  in
+  let rec_call_shift = List.length recs in
+
+  let final_p p_idx' = 
+    nw (Var p_idx') in		(* TODO apply it to \vec s *)
+
+  let final_tel = constr_tel @ (rec_call (constr_tel_shift + p_idx)) in
+
+  List.fold_left 
+    (fun v (x, t) -> nw (Pi (Common.none, t, v)))
+    (final_p (p_idx + constr_tel_shift + rec_call_shift)) final_tel
 
 
+(* let elim sigma d t cs =  *)
+(*   let p = motive_ty sigma d t in *)
+(*   let ms = List.rev (List.mapi *)
+(* 		       (fun n (c, ct) -> *)
+(* 			Common.none_with "m", method_ty sigma d t ct n) *)
+(* 		       cs) *)
+(*   in *)
+
+(*   let final_tel = ms @ ((Common.none_with "P", p) :: []) in *)
+
+(*   let result = nw (Universe 42) in *)
+(*   let elim_ty = List.fold_left *)
+(*     (fun v (x, t) -> nw (Pi (Common.none, t, v))) *)
+(*     result  *)
+(*     final_tel *)
+(*   in *)
+
+(*   Context.add_constr (d^"-elim") elim_ty sigma *)
 
 
-  let elim = List.fold_left (fun a (c, t) -> nw (Pi (c, t, a))) (nw (Universe 0)) target in
-  Context.add_constr (d^"-elim") elim sigma
+let elim sigma d t cs = Context.add_constr (d^"-elim") (nw (Universe 1729)) sigma 
