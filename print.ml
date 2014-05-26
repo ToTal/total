@@ -86,9 +86,6 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
 		   | None -> Error.violation "Expected a named variable"
 		   | Some x -> print "%s" x)
 	  | Syntax.Free v -> print "%s" (var v)
-	     (* (match Common.get_name v with *)
-	     (*  | None -> print "<fv>" *)
-	     (*  | Some x -> print "<%s>" x) *)
 	  | Syntax.Const x -> print "%s" x
           | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
           | Syntax.Universe u -> print ~at_level:1 "Type %d" u
