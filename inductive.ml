@@ -80,6 +80,10 @@ let method_ty sigma d t c ct p_nm =
   (* The parameters that represent a recursive call *)
   let recs = List.filter (fun (x, t) -> is_constr d t) constr_tel in
 
+  Print.debug "t = %t" (Print.expr ctx t) ;
+  Print.debug "d = %s" d ;
+  Print.debug "len(recs) = %d" (List.length recs) ;
+
   let hyps = List.map 
 	       (fun (x, t) -> Common.none_with "r", nw (App (p, var x)))
 	       recs
