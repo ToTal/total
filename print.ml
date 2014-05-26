@@ -104,15 +104,20 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
 
 let verbosity = ref 2
 
+let warning_verbosity = 2
+let debug_verbosity = 3
+
 let message ?(loc=Common.Nowhere) msg_type v =
   if v <= !verbosity then
     begin
-      Format.eprintf "%s at %t:@\n  @[" msg_type (position loc) ;
+      (match loc with
+       | Common.Nowhere -> Format.eprintf "%s :@\n  @[" msg_type 
+       | _ -> Format.eprintf "%s at %t:@\n  @[" msg_type (position loc)) ;
       Format.kfprintf (fun ppf -> Format.fprintf ppf "@]@.") Format.err_formatter
     end
   else
     Format.ifprintf Format.err_formatter
 
 let error (loc, err_type, msg) = message ~loc (err_type) 1 "%s" msg
-let warning msg = message "Warning" 2 msg
-let debug msg = message "Debug" 3 msg
+let warning msg = message "** Warning" warning_verbosity msg
+let debug msg = message "*** Debug" debug_verbosity msg

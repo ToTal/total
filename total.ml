@@ -74,6 +74,9 @@ let options = Arg.align [
   ("--arroff",
    Arg.Clear Config.pretty_print_arrow,
   " Use forall for non-dependent function types when pretty printing");
+  ("--debug", 
+   Arg.Unit (fun _ -> Print.verbosity := Print.debug_verbosity),
+   " Print additional debug info (potential very verbose)");
 ]
 
 (** Treat anonymous arguments as files to be run. *)
