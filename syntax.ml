@@ -140,8 +140,8 @@ type telescope = (Common.variable * expr) list
 
 let rec get_telescope : expr -> telescope * expr = function
   | Pi (x, t, e),loc -> 
-     let tel, rest = get_telescope e in
-     (x, t)::tel, db_to_var 0 x rest
+     let tel, rest = get_telescope (db_to_var 0 x e) in
+     (x, t)::tel, rest
   | Lambda _,_ -> Error.violation "Lambda found in a telescope, add?"
   | rest -> [], rest
 
