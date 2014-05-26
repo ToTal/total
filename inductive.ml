@@ -47,58 +47,78 @@ let validate_constrs (sigma : Ctx.signature)
 let nw = Common.nowhere
 (** Computes the induction hypothesis *)
 let motive_ty sigma d t = 
-  let params,_ = get_telescope t in let param_len = List.length params in
-  let vars = List.mapi (fun n _ -> nw (Var (param_len - 1 - n))) params in
-  let d = List.fold_left (fun e v -> nw (App (e, v))) (nw (Const d)) vars in
-  List.fold_left 
-    (fun v (x, t) -> nw(Pi (x, t, v))) 
-    (nw (Universe 0)) 
-    ((Common.none_with "D", d)::params)
+  let ctx = ctx_from sigma in
+  Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
+  let params,_ = get_telescope t in
+  let vars = List.map (fun (n, _) -> var n) params in
+  let d' = List.fold_left (fun e v -> nw (App (e, v))) (nw (Const d)) vars in
+  let p = List.fold_left 
+	    (fun v (x, t) -> nw(Pi (x, t, var_to_db x v))) 
+	    (nw (Universe 0)) 
+	    ((Common.none_with "D", d')::params)
+  in
+  Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
+  p
 
-let method_ty sigma d t c p_idx = 
+let method_ty sigma d t c ct p_nm = 
+  let ctx = ctx_from sigma in
+  Print.debug "Computing method : %s" c ;
+  (* The term that contains P *)
+  let p = var p_nm in
+  
   (* All the constructor's parameters *)
-  let constr_tel,_ = get_telescope c in
-  let constr_tel_shift = List.length constr_tel in
+  let constr_tel,_ = get_telescope ct in
+
+  let rec is_constr d = function 
+    | Const c, l -> c = c
+    | App (e, _), l -> is_constr d e
+    | _, _ -> false
+  in
 
   (* The parameters that represent a recursive call *)
-  let recs = List.filter (fun (x, t) -> false) constr_tel in
+  let recs = List.filter (fun (x, t) -> is_constr d t) constr_tel in
 
-  let rec_call p_idx' = List.mapi 
-		     (fun n (x, t) -> 
-		      let p = nw (Var (p_idx' + n)) in
-		      (Common.none_with "r", p))
-		     recs 
+  let hyps = List.map 
+	       (fun (x, t) -> Common.none_with "r", nw (App (p, var x)))
+	       recs
   in
-  let rec_call_shift = List.length recs in
+  let final_tel = hyps @ constr_tel in
 
-  let final_p p_idx' = 
-    nw (Var p_idx') in		(* TODO apply it to \vec s *)
+  let m = List.fold_left
+	    (fun v (x, t) -> nw (Pi (Common.none_with "O", t, var_to_db x v)))
+	    p 
+	    final_tel
+  in
+  Print.debug "For %s method: %t" c (Print.expr ctx m) ;
+  m
 
-  let final_tel = constr_tel @ (rec_call (constr_tel_shift + p_idx)) in
+let elim sigma d t cs =
+  let targets,_ = get_telescope t in
 
-  List.fold_left 
-    (fun v (x, t) -> nw (Pi (Common.none, t, v)))
-    (final_p (p_idx + constr_tel_shift + rec_call_shift)) final_tel
+  let p_nm = Common.none_with "P" in
+  let p = motive_ty sigma d t in
 
+  let ms = List.rev (List.map
+		       (fun (c, ct) ->
+			Common.none_with "m", method_ty sigma d t c ct p_nm)
+		       cs)
+  in
 
-(* let elim sigma d t cs =  *)
-(*   let p = motive_ty sigma d t in *)
-(*   let ms = List.rev (List.mapi *)
-(* 		       (fun n (c, ct) -> *)
-(* 			Common.none_with "m", method_ty sigma d t ct n) *)
-(* 		       cs) *)
-(*   in *)
+  let final_tel = ms @ ((p_nm, p) :: targets) in
 
-(*   let final_tel = ms @ ((Common.none_with "P", p) :: []) in *)
-
-(*   let result = nw (Universe 42) in *)
-(*   let elim_ty = List.fold_left *)
-(*     (fun v (x, t) -> nw (Pi (Common.none, t, v))) *)
-(*     result  *)
-(*     final_tel *)
-(*   in *)
-
-(*   Ctx.add_constr (d^"-elim") elim_ty sigma *)
+  let result = List.fold_left
+		 (fun v (x, _) -> nw (App(v, var x)))
+		 (var p_nm)
+		 targets
+  in
 
 
-let elim sigma d t cs = Ctx.add_constr (d^"-elim") (nw (Universe 1729)) sigma 
+  let elim_ty = List.fold_left
+		  (fun v (x, t) -> nw (Pi (x, t, var_to_db x v)))
+		  result
+		  final_tel
+  in
+
+  Ctx.add_constr (d^"-elim") elim_ty sigma
+
+

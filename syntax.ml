@@ -45,6 +45,8 @@ let var_to_db (v : Common.variable) (e : expr) : expr =
     | Ann (e1, e2), l -> Ann(f n e1, f n e2), l
   in
   f 0 e
+
+let var (v : Common.variable) : expr = Common.nowhere (Free v)
  
 (** Expression constructors wrapped in "nowhere" positions. *)
 let mk_var k = Common.nowhere (Var k)
