@@ -67,7 +67,8 @@ let method_ty sigma d t c ct p_nm =
   let p = var p_nm in
   
   (* All the constructor's parameters *)
-  let constr_tel,_ = get_telescope ct in
+  let constr_tel, constr = get_telescope ct in
+  Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
 
   let rec is_constr d = function 
     | Const c, l -> c = c
@@ -84,40 +85,49 @@ let method_ty sigma d t c ct p_nm =
   in
   let final_tel = hyps @ constr_tel in
 
+  let result = nw (App (p, List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
+
+  (* Print.debug "constr = %t" (Print.expr ctx constr) ; *)
+  (* Print.debug "len(constr_tel) = %d" (List.length constr_tel) ; *)
   let m = List.fold_left
-	    (fun v (x, t) -> nw (Pi (Common.none_with "O", t, var_to_db x v)))
-	    p 
+	    (fun v (x, t) -> nw (Pi (Common.none_with "d", t, var_to_db x v)))
+	    result
 	    final_tel
+
   in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
 let elim sigma d t cs =
-  let targets,_ = get_telescope t in
+  let ctx = ctx_from sigma in
+  Print.debug "Computing eliminator for %s" d ;
+  let targets, _ = get_telescope t in
+  let x = Common.none_with "x" in
+
 
   let p_nm = Common.none_with "P" in
   let p = motive_ty sigma d t in
 
-  let ms = List.rev (List.map
-		       (fun (c, ct) ->
-			Common.none_with "m", method_ty sigma d t c ct p_nm)
-		       cs)
+  let ms = List.map
+	     (fun (c, ct) ->
+	      Common.none_with "m", method_ty sigma d t c ct p_nm)
+	     cs
   in
 
-  let final_tel = ms @ ((p_nm, p) :: targets) in
+  let dest = set_telescope targets (nw (Const d)) (fun v t e -> nw (Pi (v, t, e))) in
+  let final_tel = ms @ ((p_nm, p) ::(x, dest) :: targets) in
 
   let result = List.fold_left
 		 (fun v (x, _) -> nw (App(v, var x)))
-		 (var p_nm)
+		 (nw (App(var p_nm, var x)))
 		 targets
   in
 
+  Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
+  let _ = List.map (fun (c, t) -> Print.debug "%s : %t" (Print.var c) (Print.expr ctx t)) final_tel in
+  Print.debug "result = %t" (Print.expr ctx result) ;
 
-  let elim_ty = List.fold_left
-		  (fun v (x, t) -> nw (Pi (x, t, var_to_db x v)))
-		  result
-		  final_tel
-  in
+  let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
 
   Ctx.add_constr (d^"-elim") elim_ty sigma
 

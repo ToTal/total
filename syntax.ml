@@ -26,28 +26,6 @@ and substitution =
   | Shift of int
   | Dot of expr * substitution
 
-(** Replaces instances of variable v as index 0.
-    It is up-to the user, to abstract over v *)
-let var_to_db (v : Common.variable) (e : expr) : expr =
-  let rec fsub n = function
-    | Shift n -> Shift (n+1)
-    | Dot (e, s) -> Dot (f n e, fsub n s)
-  and f n = function
-    | Var x, l -> Var (x+1), l
-    | Free v', l when Common.eq v v' -> Var n, l
-    | Free v', l -> Free v', l
-    | Const c, l -> Const c, l
-    | Subst (s, e), l -> Subst (fsub n s, f n e), l
-    | Universe n, l -> Universe n, l
-    | Pi (v, e1, e2), l -> Pi(v, f n e1, f (n+1) e2), l
-    | Lambda (v, e1, e2), l -> Lambda(v, f n e1, f (n+1) e2), l
-    | App (e1, e2), l -> App(f n e1, f n e2), l
-    | Ann (e1, e2), l -> Ann(f n e1, f n e2), l
-  in
-  f 0 e
-
-let var (v : Common.variable) : expr = Common.nowhere (Free v)
- 
 (** Expression constructors wrapped in "nowhere" positions. *)
 let mk_var k = Common.nowhere (Var k)
 let mk_subst s e = Common.nowhere (Subst (s, e))
@@ -87,7 +65,7 @@ let subst =
       | s, Lambda a -> Lambda (subst_abstraction s a), loc
       | s, App (e1, e2) -> App (mk_subst s e1, mk_subst s e2), loc
       | s, Ann (e1, e2) -> Ann (mk_subst s e1, mk_subst s e2), loc
-      | s, Free _ -> Error.violation ~loc "Open object found"
+      | s, Free n -> e		(* is this correct? *)
   and subst_abstraction s (x, e1, e2) =
     let e1 = mk_subst s e1 in
     let e2 = mk_subst (Dot (mk_var 0, compose (Shift 1) s)) e2 in
@@ -111,6 +89,51 @@ let rec occurs k (e, _) =
 and occurs_abstraction k (_, e1, e2) =
   occurs k e1 || occurs (k + 1) e2
 
+(** Replaces references to index k with free variable v *)
+(* TODO consider only for k = 0 *)
+let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr = 
+  let f = db_to_var in
+  let rec fsub n = function
+    | Shift n -> Shift (n-1)
+    | Dot (e, s) -> Dot (f n v e, fsub n s)
+  in
+  match e with
+    | Var x, l when x = k -> Free v, l
+    | Var x, l when x > k-> Var (x - 1), l
+    | Var x, l -> Var x, l
+    | Free v', l -> Free v', l
+    | Const c, l -> Const c, l
+    | Subst (s, e), l -> Subst (fsub k s, f k v e), l
+    | Universe n, l -> Universe n, l
+    | Pi (v, e1, e2), l -> Pi(v, f k v e1, f (k+1) v e2), l
+    | Lambda (v, e1, e2), l -> Lambda(v, f k v e1, f (k+1) v e2), l
+    | App (e1, e2), l -> App(f k v e1, f k v e2), l
+    | Ann (e1, e2), l -> Ann(f k v e1, f k v e2), l
+
+(** Replaces instances of variable v as index 0.
+    It is up-to the user, to abstract over v *)
+let var_to_db (v : Common.variable) (e : expr) : expr =
+  let rec fsub n = function 	(* TODO : fix *)
+    | Shift n -> Shift n
+    | Dot (e, s) -> Dot (f n e, fsub n s)
+  and f n = function
+    | Var k, l when k >= n -> Error.violation "This should not happen! (n must be, at least, one larger. Was e closed?)"
+    | Var x, l -> Var x, l
+    | Free v', l when Common.eq v v' -> Var n, l
+    | Free v', l -> Free v', l
+    | Const c, l -> Const c, l
+    | Subst (s, e), l -> Printf.printf "PROBABLY WRONG IMPLEMENTATION" ; Subst (fsub n s, f n e), l
+    | Universe n, l -> Universe n, l
+    | Pi (v, e1, e2), l -> Pi(v, f n e1, f (n+1) e2), l
+    | Lambda (v, e1, e2), l -> Lambda(v, f n e1, f (n+1) e2), l
+    | App (e1, e2), l -> App(f n e1, f n e2), l
+    | Ann (e1, e2), l -> Ann(f n e1, f n e2), l
+  in
+  f 0 e
+
+let var (v : Common.variable) : expr = Common.nowhere (Free v)
+ 
+
 (** A telescope returns all the binders (pi abstractions) at the beginning of a type.
     It returns a function that given a expression, returns a value  *)
 type telescope = (Common.variable * expr) list
@@ -118,6 +141,9 @@ type telescope = (Common.variable * expr) list
 let rec get_telescope : expr -> telescope * expr = function
   | Pi (x, t, e),loc -> 
      let tel, rest = get_telescope e in
-     (x, t)::tel, rest
+     (x, t)::tel, db_to_var 0 x rest
+  | Lambda _,_ -> Error.violation "Lambda found in a telescope, add?"
   | rest -> [], rest
 
+let rec set_telescope (t : telescope) (e : expr) (f : Common.variable -> expr -> expr -> expr ) : expr =
+  List.fold_left (fun e (x, t) -> f x t (var_to_db x e)) e t

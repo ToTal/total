@@ -46,6 +46,10 @@ let sequence ?(sep="") f lst ppf =
   in
     seq lst
 
+let var x = match Common.get_name x with 
+  | None -> "<fv>"
+  | Some x -> "<"^x^">"
+
 (** [pi xs a ppf] prints abstraction [a] as dependent product using formatter [ppf]. *)
 let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
   let xs = Ctx.names ctx in
@@ -81,10 +85,10 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
 	     else (match Common.get_name (Ctx.lookup_idx_name k gamma ~loc) with
 		   | None -> Error.violation "Expected a named variable"
 		   | Some x -> print "%s" x)
-	  | Syntax.Free v ->
-	     (match Common.get_name v with
-	      | None -> print "<free var>"
-	      | Some x -> print "<free var %s>" x)
+	  | Syntax.Free v -> print "%s" (var v)
+	     (* (match Common.get_name v with *)
+	     (*  | None -> print "<fv>" *)
+	     (*  | Some x -> print "<%s>" x) *)
 	  | Syntax.Const x -> print "%s" x
           | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
           | Syntax.Universe u -> print ~at_level:1 "Type %d" u
