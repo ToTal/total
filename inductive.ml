@@ -69,6 +69,7 @@ let method_ty sigma d t c ct p_nm =
   (* All the constructor's parameters *)
   let constr_tel, constr = get_telescope ct in
   Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
+  let _ = List.map (fun (c, t) -> Print.debug "%s : %t" (Print.var c) (Print.expr ctx t)) constr_tel in
 
   let rec is_constr d = function 
     | Const c, l -> c = c
@@ -87,14 +88,7 @@ let method_ty sigma d t c ct p_nm =
 
   let result = nw (App (p, List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
 
-  (* Print.debug "constr = %t" (Print.expr ctx constr) ; *)
-  (* Print.debug "len(constr_tel) = %d" (List.length constr_tel) ; *)
-  let m = List.fold_left
-	    (fun v (x, t) -> nw (Pi (Common.none_with "d", t, var_to_db x v)))
-	    result
-	    final_tel
-
-  in
+  let m = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
