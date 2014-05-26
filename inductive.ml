@@ -72,7 +72,7 @@ let method_ty sigma d t c ct p_nm =
   let _ = List.map (fun (c, t) -> Print.debug "%s : %t" (Print.var c) (Print.expr ctx t)) constr_tel in
 
   let rec is_constr d = function 
-    | Const c, l -> c = c
+    | Const c, l -> d = c
     | App (e, _), l -> is_constr d e
     | _, _ -> false
   in
