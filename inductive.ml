@@ -69,7 +69,7 @@ let method_ty sigma d t c ct p_nm =
   (* All the constructor's parameters *)
   let constr_tel, constr = get_telescope ct in
   Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
-  let _ = List.map (fun (c, t) -> Print.debug "%s : %t" (Print.var c) (Print.expr ctx t)) constr_tel in
+  Print.debug "constr_tel = %t" (Print.tele ctx constr_tel) ;
 
   let rec is_constr d = function 
     | Const c, l -> d = c
@@ -88,7 +88,7 @@ let method_ty sigma d t c ct p_nm =
 	       (fun (x, t) -> Common.none_with "r", nw (App (p, var x)))
 	       recs
   in
-  let final_tel = hyps @ constr_tel in
+  let final_tel = hyps @ (List.rev constr_tel) in (* I'm confused about this List.rev *)
 
   let result = nw (App (p, List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
 
@@ -122,7 +122,7 @@ let elim sigma d t cs =
   in
 
   Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
-  let _ = List.map (fun (c, t) -> Print.debug "%s : %t" (Print.var c) (Print.expr ctx t)) final_tel in
+  Print.debug "Eliminator telescope: %t" (Print.tele ctx final_tel);
   Print.debug "result = %t" (Print.expr ctx result) ;
 
   let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
