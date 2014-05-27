@@ -90,7 +90,10 @@ let method_ty sigma d t c ct p_nm =
   Print.debug "len(recs) = %d" (List.length recs) ;
 
   let hyps = List.map 
-	       (fun (x, t) -> Common.none_with "r", nw (App (p, var x)))
+	       (fun (x, t) -> 
+		Common.none_with "r", 
+		nw 
+		  (App (constructor_params_for p t, var x))) (* HERE *)
 	       recs
   in
   let final_tel = hyps @ (List.rev constr_tel) in (* I'm confused about this List.rev *)
