@@ -3,7 +3,7 @@
 open Syntax
 
 (** default generated name *)
-let default = "_n"
+let default = "x"
 
 (** Split a variable name into base and numerical postfix, e.g.,
    ["x42"] is split into [("x", 42)]. *)
