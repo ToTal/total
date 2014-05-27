@@ -90,8 +90,7 @@ and occurs_abstraction k (_, e1, e2) =
   occurs k e1 || occurs (k + 1) e2
 
 (** Replaces references to index k with free variable v *)
-(* TODO consider only for k = 0 *)
-let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr = 
+let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr =
   let f = db_to_var in
   let rec fsub n = function
     | Shift n -> Shift (n-1)
@@ -105,11 +104,13 @@ let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr =
     | Const c, l -> Const c, l
     | Subst (s, e), l -> Subst (fsub k s, f k v e), l
     | Universe n, l -> Universe n, l
-    | Pi (v, e1, e2), l -> Pi(v, f k v e1, f (k+1) v e2), l
-    | Lambda (v, e1, e2), l -> Lambda(v, f k v e1, f (k+1) v e2), l
+    | Pi (vv, e1, e2), l -> Pi(vv, f k v e1, f (k+1) v e2), l
+    | Lambda (vv, e1, e2), l -> Lambda(vv, f k v e1, f (k+1) v e2), l
     | App (e1, e2), l -> App(f k v e1, f k v e2), l
     | Ann (e1, e2), l -> Ann(f k v e1, f k v e2), l
 
+let rec top_db_to_var (v : Common.variable) (e :expr) : expr = 
+  db_to_var 0 v e
 (** Replaces instances of variable v as index 0.
     It is up-to the user, to abstract over v *)
 let var_to_db (v : Common.variable) (e : expr) : expr =
@@ -140,7 +141,7 @@ type telescope = (Common.variable * expr) list
 
 let rec get_telescope : expr -> telescope * expr = function
   | Pi (x, t, e),loc -> 
-     let tel, rest = get_telescope (db_to_var 0 x e) in
+     let tel, rest = get_telescope (top_db_to_var x e) in
      (x, t)::tel, rest
   | Lambda _,_ -> Error.violation "Lambda found in a telescope, add?"
   | rest -> [], rest
