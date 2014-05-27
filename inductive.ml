@@ -112,7 +112,8 @@ let elim sigma d t cs =
 	     cs
   in
 
-  let dest = set_telescope targets (nw (Const d)) (fun v t e -> nw (Pi (v, t, e))) in
+  let dest = set_telescope targets (nw (Const d)) (fun v t e -> nw (App(e, var v))) in
+
   let final_tel = ms @ ((p_nm, p) ::(x, dest) :: targets) in
 
   let result = List.fold_left
