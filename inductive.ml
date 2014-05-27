@@ -50,8 +50,7 @@ let motive_ty sigma d t =
   let ctx = ctx_from sigma in
   Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
   let params,_ = get_telescope t in
-  let vars = List.map (fun (n, _) -> var n) params in
-  let d' = List.fold_left (fun e v -> nw (App (e, v))) (nw (Const d)) vars in
+  let d' = set_telescope params (nw (Const d)) (fun x _ e -> nw (App (e, var x))) in
   let p = List.fold_left 
 	    (fun v (x, t) -> nw(Pi (x, t, var_to_db x v))) 
 	    (nw (Universe 0)) 
@@ -112,15 +111,11 @@ let elim sigma d t cs =
 	     cs
   in
 
-  let dest = set_telescope targets (nw (Const d)) (fun v t e -> nw (App(e, var v))) in
+  let x_dest = set_telescope targets (nw (Const d)) (fun v _ e -> nw (App(e, var v))) in
 
-  let final_tel = ms @ ((p_nm, p) ::(x, dest) :: targets) in
+  let final_tel = ms @ ((p_nm, p) ::(x, x_dest) :: targets) in
 
-  let result = List.fold_left
-		 (fun v (x, _) -> nw (App(v, var x)))
-		 (nw (App(var p_nm, var x)))
-		 targets
-  in
+  let result = set_telescope (List.rev ((x, x_dest)::targets)) (var p_nm) (fun v _ e -> nw(App(e, var v))) in
 
   Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
   Print.debug "Eliminator telescope: %t" (Print.tele ctx final_tel);
