@@ -31,7 +31,7 @@ let mk_var k = Common.nowhere (Var k)
 let mk_subst s e = Common.nowhere (Subst (s, e))
 let mk_universe u = Common.nowhere (Universe u)
 let mk_pi a = Common.nowhere (Pi a)
-let mk_arrow s t = mk_pi (Common.none, s, t)
+let mk_arrow s t = mk_pi (Common.none (), s, t)
 let mk_lambda a = Common.nowhere (Lambda a)
 let mk_app e1 e2 = Common.nowhere (App (e1, e2))
 

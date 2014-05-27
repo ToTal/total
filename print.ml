@@ -58,7 +58,7 @@ let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
     let x = Beautify.refresh x xs in
       print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Ctx.extend gamma (Common.some x, e1)) e2)
   else
-    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Ctx.extend gamma (Common.none, e1)) e2)
+    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Ctx.extend gamma (Common.none (), e1)) e2)
 
 (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
 and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =

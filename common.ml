@@ -6,7 +6,7 @@ type name = string
 
 type variable = name option * unit ref
 
-let none = None, ref ()
+let none () = None, ref ()
 let none_with x = Some x, ref ()
 let some x = Some x, ref ()
 

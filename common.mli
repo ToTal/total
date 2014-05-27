@@ -2,7 +2,7 @@ type name = string
 
 type variable 
 
-val none : variable
+val none : unit -> variable
 
 val none_with : name -> variable
 

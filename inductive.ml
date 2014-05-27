@@ -111,7 +111,6 @@ let elim sigma d t cs =
   let targets, _ = get_telescope t in
   let x = Common.none_with "x" in
 
-
   let p_nm = Common.none_with "P" in
   let p = motive_ty sigma d t in
 

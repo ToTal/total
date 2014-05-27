@@ -71,7 +71,7 @@ plain_expr:
   | FUN lst = abstraction DARROW e = expr
     { fst (make_lambda e lst) }
   | t1 = app_expr ARROW t2 = expr
-    { Pi (Common.none, t1, t2) }
+    { Pi (Common.none (), t1, t2) }
 
 app_expr: mark_position(plain_app_expr) { $1 }
 plain_app_expr:
