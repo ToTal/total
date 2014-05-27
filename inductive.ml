@@ -60,6 +60,12 @@ let motive_ty sigma d t =
   p
 
 let method_ty sigma d t c ct p_nm = 
+  let rec constructor_params_for p = function
+    | App (e1, e2), l -> App(constructor_params_for p e1, e2), l
+    | Const _, l -> (fst p), l
+    | _ -> Error.violation "Pum"
+  in
+
   let ctx = ctx_from sigma in
   Print.debug "Computing method : %s" c ;
   (* The term that contains P *)
@@ -89,7 +95,11 @@ let method_ty sigma d t c ct p_nm =
   in
   let final_tel = hyps @ (List.rev constr_tel) in (* I'm confused about this List.rev *)
 
-  let result = nw (App (p, List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
+  (* p with argments up to D applied *) 
+  let p' = constructor_params_for p constr in
+  Print.debug "What I want to know is: %t" (Print.expr ctx constr) ;
+
+  let result = nw (App (p', List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
 
   let m = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
