@@ -1,0 +1,14 @@
+Inductive Nat : Type 0 := 
+| Z : Nat 
+| S : Nat -> Nat
+.
+
+Definition plus : Nat -> Nat -> Nat :=
+fun m : Nat =>  fun n : Nat => 
+  Nat-elim m 
+    (fun x : Nat => Nat)
+    n 
+    (fun nn : Nat => fun prec : Nat => S nn)
+.
+
+Context.

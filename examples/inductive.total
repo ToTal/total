@@ -1,3 +1,5 @@
+Inductive False : Type 0 := .
+
 Inductive Nat : Type 0 := 
 | Z : Nat 
 | S : Nat -> Nat.
