@@ -137,8 +137,8 @@ let elim sigma d t cs =
 
    let kind = Typing.infer ctx elim_ty in
    if not (is_kind ctx (Norm.whnf ctx kind)) then
-     Error.violation ~loc:(snd elim_ty) 
-		     "expresion @ %t@  in eliminator is not a kind @ %t@ " 
+     Error.violation (* ~loc:(snd elim_ty)  *)
+		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)" 
 		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
 
   Ctx.add_constr (d^"-elim") elim_ty sigma
