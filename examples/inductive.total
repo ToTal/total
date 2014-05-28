@@ -4,7 +4,7 @@ Inductive Nat : Type 0 :=
 | Z : Nat 
 | S : Nat -> Nat.
 
-Axiom plus : Nat -> Nat -> Nat. (* TODO : waiting for eliminators *)
+Axiom plus : Nat -> Nat -> Nat. 
 
 Inductive Fin : Nat -> Type 0 := 
 | F_z : forall n : Nat , Fin (S n)
