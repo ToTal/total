@@ -11,7 +11,7 @@ let ctx_from sigma = (sigma, Ctx.empty_context)
 let elab_type_constr sigma x t =
   let ctx = ctx_from sigma in
   let _ = Typing.infer ctx t in
-  if not (is_kind ctx t) then
+  if not (is_kind ctx (Norm.whnf ctx t)) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
   Ctx.add_constr x t sigma
 
@@ -134,6 +134,12 @@ let elim sigma d t cs =
   Print.debug "result = %t" (Print.expr ctx result) ;
 
   let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+
+   let kind = Typing.infer ctx elim_ty in
+   if not (is_kind ctx (Norm.whnf ctx kind)) then
+     Error.violation ~loc:(snd elim_ty) 
+		     "expresion @ %t@  in eliminator is not a kind @ %t@ " 
+		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
 
   Ctx.add_constr (d^"-elim") elim_ty sigma
 
