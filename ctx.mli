@@ -3,6 +3,7 @@
 type declaration = 
   | Axiom of Syntax.expr
   | Constr of Syntax.expr
+  | Elim of Syntax.expr * int 	(* includes the arity *)
   | Definition of Syntax.expr * Syntax.expr
 
 type signature
@@ -14,8 +15,12 @@ val lookup_ty : Common.name -> signature -> Syntax.expr
 val lookup_definition :
   Common.name -> signature -> Syntax.expr option
 
+val lookup_elim :
+  Common.name -> signature -> (Syntax.expr * int) option
+
 val add_axiom : Common.name -> Syntax.expr -> signature -> signature
 val add_constr : Common.name -> Syntax.expr -> signature -> signature
+val add_elim : Common.name -> Syntax.expr -> signature -> signature
 
 val add_definition :
   Common.name -> Syntax.expr -> Syntax.expr -> signature -> signature
@@ -25,6 +30,8 @@ val mem : string -> signature -> bool
 val combine : signature -> (string * declaration) list
 
 val sig_fold : ('a -> Common.name * declaration -> 'a) -> 'a -> signature -> 'a
+
+val is_elim : signature -> Common.name -> bool
 
 (* Context *)
 

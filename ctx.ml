@@ -10,6 +10,7 @@
 type declaration = 
   | Axiom of Syntax.expr
   | Constr of Syntax.expr
+  | Elim of Syntax.expr * int 	(* it includes the arity *)
   | Definition of Syntax.expr * Syntax.expr
 
 (** A signature consists of a list of names, used for pretty-printing and
@@ -23,17 +24,29 @@ let empty_signature = []
 (** [lookup_ty k ctx] returns the type of [Var k] in signature [ctx]. *)
 let lookup_ty x sigma =
   match List.assoc x sigma with
-    | Axiom t | Constr t | Definition (t, _) -> t
+    | Axiom t | Constr t | Elim (t,_) | Definition (t, _) -> t
 
 (** [lookup_definition k ctx] returns the definition of [Var k] in signature [ctx]. *)
-let rec lookup_definition x sigma = 
+let lookup_definition x sigma = 
   match List.assoc x sigma with
     | Definition (_, e) -> Some e
-    | Axiom _ | Constr _ -> None
+    | Axiom _ | Constr _  | Elim _-> None
+
+let lookup_elim x sigma = 
+  match List.assoc x sigma with
+    | Elim (e, n) -> Some (e, n)
+    | Axiom _ | Constr _  | Definition _ -> None
 
 (** [add_parameter x t ctx] returns [ctx] with the parameter [x] of type [t]. *)
 let add_axiom x t ctx = (x, Axiom t) :: ctx
 let add_constr x t ctx = (x, Constr t) :: ctx
+let add_elim x t ctx = 
+  let rec tp_arity n = function 
+    | Syntax.Pi (_,_, e), l -> tp_arity (n+1) e
+    | _ -> n
+  in
+  let n = tp_arity 0 t in
+  (x, Elim (t, n)) :: ctx
 
 (** [add_definition x t e ctx] returns [ctx] with [x] of type [t] defined as [e]. *)
 let add_definition x t e ctx = (x, Definition (t, e)) :: ctx
@@ -43,6 +56,11 @@ let combine sigma = sigma
 let mem = List.mem_assoc
 
 let sig_fold = List.fold_left
+
+let is_elim sigma x =
+  match List.assoc x sigma with
+  | Elim _ -> true
+  | _ -> false
 
 (** Local context management *)
 

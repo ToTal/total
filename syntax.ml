@@ -148,3 +148,14 @@ let rec get_telescope : expr -> telescope * expr = function
 
 let rec set_telescope (t : telescope) (e : expr) (f : Common.variable -> expr -> expr -> expr ) : expr =
   List.fold_left (fun e (x, t) -> f x t (var_to_db x e)) e t
+
+(* Note: split and join head spine destroy location information, it'd
+   be better to have a native spine based representation (TODO) *)
+
+let rec split_head_spine (e, l) = match e with
+  | App(e1, e2) -> let h, sp = split_head_spine e1 in h, (e2 :: sp)
+  | _ -> (e, l), []
+
+let join_head_spine h sp =
+  List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp
+

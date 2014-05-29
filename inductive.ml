@@ -141,6 +141,6 @@ let elim sigma d t cs =
 		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)" 
 		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
 
-  Ctx.add_constr (d^"-elim") elim_ty sigma
+  Ctx.add_elim (d^"-elim") elim_ty sigma
 
 

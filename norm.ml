@@ -24,7 +24,8 @@ let norm ?(weak=false) =
       | App (e1, e2) ->
         let (e1', _) as e1 = norm ctx e1 in
           (match e1' with
-            | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e)
+            | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e) (* Beta - reduction *)
+	    | Const x when is_elim sigma x -> iota ctx (App (e1, e2), loc)  (* Iota - reduction *)
             | Var _ | Free _ | Const _ | App _ -> 
               let e2 = (if weak then e2 else norm ctx e2) in 
                 App (e1, e2), loc
@@ -36,6 +37,22 @@ let norm ?(weak=false) =
     if weak
     then a
     else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)
+  
+  and iota (sigma, gamma as ctx) e =
+    assert false
+    (* let h, sp = split_head_spine e in *)
+    (* let x = (match norm ctx h with *)
+    (* | Const x, _ -> (if (is_elim sigma x) then x else Error.violation "iota reduction called in something that is not an eliminator")  *)
+    (* | _ -> Error.violation "iota reudction does not contain an eliminator in its head")  *)
+    (* in *)
+    (* let t, n = match (lookup_elim x sigma) with Some (t, n) -> t, n | None -> Error.violation "this cannot happen" in *)
+    (* if n = List.length sp then *)
+    (*   (\* continue checking if it reduces *\) *)
+    (*   assert false *)
+    (* else *)
+    (*   Print.debug "n= %d | len(sp) = %d[[%t]]" n (List.length sp) (Print.expr ctx e) ; *)
+    (*   e *)
+
   in
     norm
 

@@ -115,6 +115,8 @@ let rec exec_cmd interactive sigma (d, loc) =
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Constr t) ->
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
+          | (x, Elim (t, _)) ->
+            Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Definition (t, e)) ->
             Format.printf "@[%s = %t@]@\n    : %t@." x (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t))
 	(combine sigma);
