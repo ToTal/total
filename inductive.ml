@@ -13,7 +13,7 @@ let elab_type_constr sigma x t =
   let _ = Typing.infer ctx t in
   if not (is_kind ctx (Norm.whnf ctx t)) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
-  Ctx.add_constr x t sigma
+  Ctx.add_constr x t 0 sigma 	(* type constructor is number 0 *)
 
 let rec constructs_type x = function
   | Pi (_,_,e),_ -> constructs_type x e
@@ -27,7 +27,7 @@ let validate_constrs (sigma : Ctx.signature)
 		 (x : Common.name) 
 		 (t : Syntax.expr) 
 		 (cs : (Common.name * Syntax.expr) list) =
-  let elab sigma (c, t) = 
+  let elab (sigma, n) (c, t) = 
     let ctx = ctx_from sigma in
     if not (constructs_type x t) then
       Error.typing ~loc:(snd t) 
@@ -40,9 +40,9 @@ let validate_constrs (sigma : Ctx.signature)
     		   c (Print.expr ctx t) (Print.expr ctx k) ;
     if not (positive t x) then
       Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
-    Ctx.add_constr c t sigma
+    (Ctx.add_constr c t n sigma, n+1)
   in
-  List.fold_left elab sigma cs
+  fst(List.fold_left elab (sigma, 0) (List.rev cs)) (* TODO use fold_right? *)
 
 let nw = Common.nowhere
 (** Computes the induction hypothesis *)
@@ -75,12 +75,6 @@ let method_ty sigma d t c ct p_nm =
   let constr_tel, constr = get_telescope ct in
   Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
   Print.debug "constr_tel = %t" (Print.tele ctx constr_tel) ;
-
-  let rec is_constr d = function 
-    | Const c, l -> d = c
-    | App (e, _), l -> is_constr d e
-    | _, _ -> false
-  in
 
   (* The parameters that represent a recursive call *)
   let recs = List.filter (fun (x, t) -> is_constr d t) constr_tel in
@@ -141,6 +135,6 @@ let elim sigma d t cs =
 		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)" 
 		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
 
-  Ctx.add_elim (d^"-elim") elim_ty sigma
+  Ctx.add_elim (d^"-elim") elim_ty d sigma
 
 

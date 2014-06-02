@@ -159,3 +159,10 @@ let rec split_head_spine (e, l) = match e with
 let join_head_spine h sp =
   List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp
 
+(* Returns wether e constains the constant d in its head *)
+let is_constr d e = 
+    let h, _ = split_head_spine e in
+    match h with
+    | Const c, l -> d = c
+    | _ -> false
+

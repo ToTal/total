@@ -2,8 +2,8 @@
 
 type declaration = 
   | Axiom of Syntax.expr
-  | Constr of Syntax.expr
-  | Elim of Syntax.expr * int 	(* includes the arity *)
+  | Constr of Syntax.expr * int (* all the constructors are numbered *)
+  | Elim of Syntax.expr * int * Common.name (* it includes the arity and the type it eliminates *)
   | Definition of Syntax.expr * Syntax.expr
 
 type signature
@@ -15,12 +15,14 @@ val lookup_ty : Common.name -> signature -> Syntax.expr
 val lookup_definition :
   Common.name -> signature -> Syntax.expr option
 
+val lookup_constr_number : Common.name -> signature -> int option
+
 val lookup_elim :
-  Common.name -> signature -> (Syntax.expr * int) option
+  Common.name -> signature -> (Syntax.expr * int * Common.name) option
 
 val add_axiom : Common.name -> Syntax.expr -> signature -> signature
-val add_constr : Common.name -> Syntax.expr -> signature -> signature
-val add_elim : Common.name -> Syntax.expr -> signature -> signature
+val add_constr : Common.name -> Syntax.expr -> int -> signature -> signature
+val add_elim : Common.name -> Syntax.expr -> Common.name -> signature -> signature
 
 val add_definition :
   Common.name -> Syntax.expr -> Syntax.expr -> signature -> signature

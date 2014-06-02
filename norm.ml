@@ -3,6 +3,11 @@
 open Syntax
 open Ctx
 
+let rec head_is_elim sigma = function
+  | App (e1, e2),l -> head_is_elim sigma e1
+  | Const x, l -> is_elim sigma x
+  | _ -> false
+
 (** [norm env e] evaluates expression [e] in environment [env] to a weak head normal form,
     while [norm weak:false env e] evaluates to normal form. *)
 let norm ?(weak=false) =
@@ -24,8 +29,17 @@ let norm ?(weak=false) =
       | App (e1, e2) ->
         let (e1', _) as e1 = norm ctx e1 in
           (match e1' with
-            | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e) (* Beta - reduction *)
-	    | Const x when is_elim sigma x -> iota ctx (App (e1, e2), loc)  (* Iota - reduction *)
+	   (* Beta - reduction *)
+            | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e)
+	    (* Iota - reduction *)
+	    | App _ when head_is_elim sigma e1 -> 
+	       let (Const x, _), _ = split_head_spine e1 in
+	       let Some (delim, _, d) = lookup_elim x sigma in
+	       iota ctx (App (e1, e2), loc) delim d
+	    | Const x when is_elim sigma x -> 
+	       let Some (delim, _, d) = lookup_elim x sigma in
+	       iota ctx (App (e1, e2), loc) delim d
+
             | Var _ | Free _ | Const _ | App _ -> 
               let e2 = (if weak then e2 else norm ctx e2) in 
                 App (e1, e2), loc
@@ -38,20 +52,47 @@ let norm ?(weak=false) =
     then a
     else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)
   
-  and iota (sigma, gamma as ctx) e =
-    assert false
-    (* let h, sp = split_head_spine e in *)
-    (* let x = (match norm ctx h with *)
-    (* | Const x, _ -> (if (is_elim sigma x) then x else Error.violation "iota reduction called in something that is not an eliminator")  *)
-    (* | _ -> Error.violation "iota reudction does not contain an eliminator in its head")  *)
-    (* in *)
-    (* let t, n = match (lookup_elim x sigma) with Some (t, n) -> t, n | None -> Error.violation "this cannot happen" in *)
-    (* if n = List.length sp then *)
-    (*   (\* continue checking if it reduces *\) *)
-    (*   assert false *)
-    (* else *)
-    (*   Print.debug "n= %d | len(sp) = %d[[%t]]" n (List.length sp) (Print.expr ctx e) ; *)
-    (*   e *)
+  and iota (sigma, gamma as ctx) e delim d =
+    let rec recs p mvec = function
+      | [] -> []
+      | e::es when is_constr d e ->
+	 (join_head_spine delim (e::p::mvec)):: recs p mvec es
+      | e::es -> recs p mvec es
+    in
+    let h, sp = split_head_spine e in
+    let x = (match norm ctx h with
+    | Const x, _ -> 
+       (if (is_elim sigma x) then x 
+	else Error.violation "iota reduction called in something that is not an eliminator")
+    | _ -> Error.violation "iota reudction does not contain an eliminator in its head")
+    in
+    let t, n = match (lookup_elim x sigma) with 
+      |	Some (t, n, _) -> t, n 
+      | None -> Error.violation "this cannot happen" in
+    if n = List.length sp then
+      (* the head of the spine contains the target *)
+      let t_hd, t_sp = split_head_spine (norm ctx (List.hd sp)) in
+      (match t_hd with
+       (* the normal form of the target is constructor *)
+       | Const x, l -> 
+	  let p, mvec = 
+	    (match sp  with 
+	     | p:: mvec -> p, mvec | _ -> Error.violation "The spine is too short!") 
+	  in	
+	  let i = (match lookup_constr_number x sigma with 
+		   | Some i -> i | _ -> Error.violation "Constructor has to exist") 
+	  in
+	  let mi = List.nth mvec i in
+	  let rs = recs p mvec t_sp in
+	  join_head_spine mi (t_sp @ rs)
+	  
+       (* the eliminator is stuck *)
+       | _ -> 
+	  Print.debug "Stuck eliminator %t" (Print.expr ctx e) ;
+	  e)
+    else
+      (Print.debug "n= %d | len(sp) = %d[[%t]]" n (List.length sp) (Print.expr ctx e) ;
+      e)
 
   in
     norm

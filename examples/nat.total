@@ -8,7 +8,7 @@ fun m : Nat =>  fun n : Nat =>
   Nat-elim m 
     (fun x : Nat => Nat)
     n 
-    (fun nn : Nat => fun prec : Nat => S nn)
+    (fun nn : Nat => fun prec : Nat => S n)
 .
 
 Context.
