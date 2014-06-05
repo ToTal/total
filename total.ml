@@ -98,15 +98,16 @@ let parse parser lex =
     result if in interactive mode, and returns the new context. *)
 let rec exec_cmd interactive sigma (d, loc) =
   let ctx_from sigma = (sigma, Ctx.empty_context) in
+  let ctx = ctx_from sigma in
   match d with
     | Input.Eval e ->
       let e = Desugar.desugar sigma e in
-      let t = Typing.infer (ctx_from sigma) e in
-      let e = Norm.nf (ctx_from sigma) e in
-        if interactive then
-          Format.printf "    = %t@\n    : %t@."
-            (Print.expr (ctx_from sigma) e)
-            (Print.expr (ctx_from sigma) t) ;
+      let t = Norm.nf ctx (Typing.infer ctx e) in
+      let e = Norm.nf ctx e in
+      if interactive then
+         Format.printf "    = %t@\n    : %t@."
+		       (Print.expr ctx e)
+		       (Print.expr ctx (Norm.nf ctx t)) ;
         sigma
     | Input.Context ->
       List.iter
@@ -139,7 +140,7 @@ let rec exec_cmd interactive sigma (d, loc) =
 				 x (Print.expr ctx t) (Print.expr ctx (Desugar.desugar sigma t'))) ;
        if interactive then
          Format.printf "%s is defined.@." x ;
-       add_definition x t e sigma
+       add_definition x (Norm.nf ctx t) e sigma
     | Input.Check e ->
       let e = Desugar.desugar sigma e in
       let t = Typing.infer (ctx_from sigma) e in
