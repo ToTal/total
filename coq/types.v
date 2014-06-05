@@ -30,3 +30,25 @@ Inductive DTree : Nat -> Set :=
 Print Tree_rec.
 Print DTree_rec.
 Print DTree_rect.
+
+Definition plus : Nat -> Nat -> Nat.
+intros m n.
+refine (Nat_rec _ n _ m).
+intros ms ns.
+exact (S ns).
+Defined.
+
+Definition plus' := 
+  fun m n : Nat => 
+    Nat_rec (fun _ : Nat => Nat) n (fun _ ns : Nat => S ns) m.
+
+Eval compute in (plus Z Z).
+Eval compute in (plus Z (S Z)).
+Eval compute in (plus (S Z) Z).
+Eval compute in (plus (S Z) (S Z)).
+
+Eval compute in (plus' Z Z).
+Eval compute in (plus' Z (S Z)).
+Eval compute in (plus' (S Z) Z).
+Eval compute in (plus' (S Z) (S Z)).
+
