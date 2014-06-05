@@ -42,6 +42,12 @@ let lookup_elim x sigma =
     | Elim (e, n, d) -> Some (e, n, d)
     | Axiom _ | Constr _  | Definition _ -> None
 
+let rec lookup_elim_for_ty d = function
+  | [] -> None
+  | (x, Elim (e, n, d'))::_ when d = d' -> Some x
+  | _::rest -> lookup_elim_for_ty d rest
+
+
 (** [add_parameter x t ctx] returns [ctx] with the parameter [x] of type [t]. *)
 let add_axiom x t ctx = (x, Axiom t) :: ctx
 let add_constr x t n ctx = (x, Constr (t, n)) :: ctx

@@ -20,6 +20,9 @@ val lookup_constr_number : Common.name -> signature -> int option
 val lookup_elim :
   Common.name -> signature -> (Syntax.expr * int * Common.name) option
 
+val lookup_elim_for_ty :
+  Common.name -> signature -> Common.name option
+
 val add_axiom : Common.name -> Syntax.expr -> signature -> signature
 val add_constr : Common.name -> Syntax.expr -> int -> signature -> signature
 val add_elim : Common.name -> Syntax.expr -> Common.name -> signature -> signature
