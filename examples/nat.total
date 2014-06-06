@@ -14,3 +14,8 @@ fun m : Nat =>  fun n : Nat =>
 Definition add := (plus : (Nat -> Nat -> Nat)).
 
 Context.
+
+
+Definition tres := plus (S (S Z)) (S Z).
+
+Definition cuatro := plus (S Z) tres.
