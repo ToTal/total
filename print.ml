@@ -99,15 +99,13 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
   in
     expr ?max_level e ppf
     
-(* let expr' e ppf = expr (Common.nowhere e) ppf *)
-
-let tele ctx (tel : Syntax.telescope) ppf = 
-  let rec tele (sigma, gamma as ctx) tel ppf = 
-    match tel with
-    | [] -> ()
-    | (x, t):: rest -> print ppf "%s : %t ; %t" (var x) (expr ctx t) (tele (sigma, Ctx.extend gamma (x, t)) rest)
-  in
-  tele ctx (List.rev tel) ppf
+(* let tele ctx (tel : Syntax.telescope) ppf =  *)
+(*   let rec tele (sigma, gamma as ctx) tel ppf =  *)
+(*     match tel with *)
+(*     | [] -> () *)
+(*     | (x, t):: rest -> print ppf "%s : %t ; %t" (var x) (expr ctx t) (tele (sigma, Ctx.extend gamma (x, t)) rest) *)
+(*   in *)
+(*   tele ctx (List.rev tel) ppf *)
   
 (** Support for printing of errors, warning and debugging information. *)
 

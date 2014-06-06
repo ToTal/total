@@ -1,4 +1,5 @@
 open Syntax
+open Su
 
 let rec is_kind c = function 
   | Universe _, _ -> true
@@ -49,8 +50,8 @@ let nw = Common.nowhere
 let motive_ty sigma d t = 
   let ctx = ctx_from sigma in
   Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
-  let params,_ = get_telescope t in
-  let d' = set_telescope params (nw (Const d)) (fun x _ e -> nw (App (e, var x))) in
+  let params,_ = get_telescope ctx t in
+  let d' = set_telescope ctx params (nw (Const d)) (fun x _ e -> nw (App (e, var x))) in
   let p = List.fold_left 
 	    (fun v (x, t) -> nw(Pi (x, t, var_to_db x v))) 
 	    (nw (Universe 0)) 
@@ -72,12 +73,12 @@ let method_ty sigma d t c ct p_nm =
   let p = var p_nm in
   
   (* All the constructor's parameters *)
-  let constr_tel, constr = get_telescope ct in
+  let constr_tel, constr = get_telescope ctx ct in
   Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
-  Print.debug "constr_tel = %t" (Print.tele ctx constr_tel) ;
+  Print.debug "constr_tel = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) constr_tel) ;
 
   (* The parameters that represent a recursive call *)
-  let recs = List.filter (fun (x, t) -> is_constr d t) constr_tel in
+  let recs = List.filter (fun (x, t) -> is_constr ctx d t) constr_tel in
 
   Print.debug "t = %t" (Print.expr ctx t) ;
   Print.debug "d = %s" d ;
@@ -98,14 +99,14 @@ let method_ty sigma d t c ct p_nm =
 
   let result = nw (App (p', List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
 
-  let m = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let m = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
 let elim sigma d t cs =
   let ctx = ctx_from sigma in
   Print.debug "Computing eliminator for %s" d ;
-  let targets, _ = get_telescope t in
+  let targets, _ = get_telescope ctx t in
   let x = Common.none_with "x" in
 
   let p_nm = Common.none_with "P" in
@@ -117,17 +118,17 @@ let elim sigma d t cs =
 	     cs
   in
 
-  let x_dest = set_telescope targets (nw (Const d)) (fun v _ e -> nw (App(e, var v))) in
+  let x_dest = set_telescope ctx targets (nw (Const d)) (fun v _ e -> nw (App(e, var v))) in
 
   let final_tel = ms @ ((p_nm, p) ::(x, x_dest) :: targets) in
 
-  let result = set_telescope (List.rev ((x, x_dest)::targets)) (var p_nm) (fun v _ e -> nw(App(e, var v))) in
+  let result = set_telescope ctx (List.rev ((x, x_dest)::targets)) (var p_nm) (fun v _ e -> nw(App(e, var v))) in
 
   Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
-  Print.debug "Eliminator telescope: %t" (Print.tele ctx final_tel);
+  Print.debug "Eliminator telescope: %t" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) final_tel) ;
   Print.debug "result = %t" (Print.expr ctx result) ;
 
-  let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let elim_ty = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
 
    let kind = Typing.infer ctx elim_ty in
    if not (is_kind ctx (Norm.whnf ctx kind)) then

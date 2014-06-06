@@ -1,6 +1,7 @@
 (** Normalization of expressions. *)
 
 open Syntax
+open Su
 open Ctx
 
 let rec head_is_elim sigma = function
@@ -12,7 +13,7 @@ let rec head_is_elim sigma = function
 (* The new normal *)
 let new_norm ?(weak=false) =
   let rec norm (sigma, gamma as ctx) ((e', loc) as e) =
-    let h_e, sp_e = split_head_spine e in
+    let h_e, sp_e = split_head_spine ctx e in
     match h_e with
     | Const x, loc -> 
        begin match lookup_definition x sigma with
@@ -54,7 +55,7 @@ let norm ?(weak=false) =
             | Lambda (x, t, e) -> norm ctx (mk_subst (Dot (e2, idsubst)) e)
 	    (* Iota - reduction *)
 	    | App _ when head_is_elim sigma e1 -> 
-	       let (Const x, _), _ = split_head_spine e1 in
+	       let (Const x, _), _ = split_head_spine ctx e1 in
 	       let Some (delim, _, d) = lookup_elim x sigma in
 	       iota ctx (App (e1, e2), loc) delim d
 	    | Const x when is_elim sigma x -> 
