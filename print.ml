@@ -83,7 +83,7 @@ and expr ?max_level (_sigma, gamma as ctx) e ppf =
 	     if !Config.pretty_print_db 
 	     then print "<%d>" k 
 	     else (match Common.get_name (Ctx.lookup_idx_name k gamma ~loc) with
-		   | None -> Error.violation "Expected a named variable"
+		   | None -> print "<%d>" k (* Printing the index for unnamed vars when printing open terms. *)
 		   | Some x -> print "%s" x)
 	  | Syntax.Free v -> print "%s" (var v)
 	  | Syntax.Const x -> print "%s" x

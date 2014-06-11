@@ -103,7 +103,7 @@ let method_ty sigma d t c ct p_nm =
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
-let elim sigma d t cs =
+let elim sigma d t cs = 
   let ctx = ctx_from sigma in
   Print.debug "Computing eliminator for %s" d ;
   let targets, _ = get_telescope ctx t in
@@ -113,9 +113,9 @@ let elim sigma d t cs =
   let p = motive_ty sigma d t in
 
   let ms = List.map
-	     (fun (c, ct) ->
-	      Common.none_with "m", method_ty sigma d t c ct p_nm)
-	     cs
+  	     (fun (c, ct) ->
+  	      Common.none_with "m", method_ty sigma d t c ct p_nm)
+  	     cs
   in
 
   let x_dest = set_telescope ctx targets (nw (Const d)) (fun v _ e -> nw (App(e, var v))) in
@@ -133,8 +133,8 @@ let elim sigma d t cs =
    let kind = Typing.infer ctx elim_ty in
    if not (is_kind ctx (Norm.whnf ctx kind)) then
      Error.violation (* ~loc:(snd elim_ty)  *)
-		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)" 
-		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
+  		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
+  		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
 
   Ctx.add_elim (d^"-elim") elim_ty d sigma
 

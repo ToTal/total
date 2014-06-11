@@ -1,9 +1,17 @@
+(* Eliminators *)
+
+type eliminator = 
+    { t : Syntax.expr 	                    (* The type of the eliminator. *)
+    ; arity : int		            (* The arity of the eliminator *)
+    ; t_name : Common.name	            (* The name of the type it eliminates *)
+    }
+
 (* Signature *)
 
 type declaration = 
   | Axiom of Syntax.expr
   | Constr of Syntax.expr * int (* all the constructors are numbered *)
-  | Elim of Syntax.expr * int * Common.name (* it includes the arity and the type it eliminates *)
+  | Elim of eliminator
   | Definition of Syntax.expr * Syntax.expr
 
 type signature
@@ -18,7 +26,7 @@ val lookup_definition :
 val lookup_constr_number : Common.name -> signature -> int option
 
 val lookup_elim :
-  Common.name -> signature -> (Syntax.expr * int * Common.name) option
+  Common.name -> signature -> eliminator option
 
 val lookup_elim_for_ty :
   Common.name -> signature -> Common.name option

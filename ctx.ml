@@ -3,6 +3,11 @@
 (** The signature is represented as an associative list which maps a variable [x] to a pair
    [(t,e)] where [t] is its type and [e] is its value (optional).
 *)
+type eliminator = 
+    { t : Syntax.expr 	                    (* The type of the eliminator. *)
+    ; arity : int		            (* The arity of the eliminator *)
+    ; t_name : Common.name	            (* The name of the type it eliminates *)
+    }
 
 (** The entries in the signature are declarations of parameters or definitions.
     A parameter declaration carries its type, while a definition carries the type and
@@ -10,7 +15,7 @@
 type declaration = 
   | Axiom of Syntax.expr
   | Constr of Syntax.expr * int (* all the constructors are numbered *)
-  | Elim of Syntax.expr * int * Common.name (* it includes the arity and the type it eliminates *)
+  | Elim of eliminator
   | Definition of Syntax.expr * Syntax.expr
 
 (** A signature consists of a list of names, used for pretty-printing and
@@ -24,7 +29,8 @@ let empty_signature = []
 (** [lookup_ty k ctx] returns the type of [Var k] in signature [ctx]. *)
 let lookup_ty x sigma =
   match List.assoc x sigma with
-    | Axiom t | Constr (t,_) | Elim (t,_,_) | Definition (t, _) -> t
+    | Axiom t | Constr (t,_) | Definition (t, _) -> t
+    | Elim el -> el.t
 
 (** [lookup_definition k ctx] returns the definition of [Var k] in signature [ctx]. *)
 let lookup_definition x sigma = 
@@ -39,12 +45,13 @@ let lookup_constr_number x sigma =
 
 let lookup_elim x sigma = 
   match List.assoc x sigma with
-    | Elim (e, n, d) -> Some (e, n, d)
+    | Elim el -> Some el
     | Axiom _ | Constr _  | Definition _ -> None
 
+(** Looks up the name of the eliminator for a given type *)
 let rec lookup_elim_for_ty d = function
   | [] -> None
-  | (x, Elim (e, n, d'))::_ when d = d' -> Some x
+  | (x, Elim el)::_ when d = el.t_name -> Some x
   | _::rest -> lookup_elim_for_ty d rest
 
 
@@ -57,7 +64,7 @@ let add_elim x t d ctx =
     | _ -> n
   in
   let n = tp_arity 0 t in
-  (x, Elim (t, n, d)) :: ctx
+  (x, Elim {t = t ; arity = n ; t_name = d}) :: ctx
 
 (** [add_definition x t e ctx] returns [ctx] with [x] of type [t] defined as [e]. *)
 let add_definition x t e ctx = (x, Definition (t, e)) :: ctx
@@ -90,7 +97,7 @@ let extend ctx x = Cons (ctx, x)
 
 let rec lookup_idx ~loc k gamma = 
   match gamma, k with
-  | Empty, _ -> Error.scoping ~loc "unknown index" (* Is this a violation? I think it is *)
+  | Empty, _ -> Error.violation ~loc "unknown index" (* Is this a violation? I think it is *)
   | Cons (gamma, e), 0 -> e
   | Cons (gamma, _), k -> lookup_idx ~loc (k - 1) gamma
 

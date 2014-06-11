@@ -46,11 +46,11 @@ let split_head_spine ctx e =
   (* 	      (Print.expr ctx e) *)
   (* 	      (Print.expr ctx h) *)
   (* 	      (Print.sequence ~sep:" ;" (fun e -> Print.expr ctx e) sp) ; *)
-  h, sp
+  h, List.rev sp
 	       
 
 let join_head_spine h sp =
-  List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp
+  List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h (List.rev sp)
 
 (* Returns wether e constains the constant d in its head *)
 let is_constr ctx d e = 
