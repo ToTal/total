@@ -8,14 +8,14 @@ open Ctx
     while [norm weak:false env e] evaluates to normal form. *)
 let norm ?(weak=false) =
   let rec norm (sigma, gamma as ctx) ((e', loc) as e) =
-    let h_e, sp_e = split_head_spine ctx e in
+    let h_e, sp_e = split_head_spine e in
     let empty = function | [] -> true | _ -> false in
     let empty_sp = empty sp_e in
     match h_e with
     | Lambda a, loc when empty_sp ->
        Lambda (norm_abstraction ctx a), loc
     | Lambda (_, _, body), loc -> (* lambda with a spine triggers a beta reduction *)
-       norm ctx (join_head_spine ctx (norm ctx (mk_subst (Dot (List.hd sp_e, idsubst)) body)) (List.tl sp_e))
+       norm ctx (join_head_spine (norm ctx (mk_subst (Dot (List.hd sp_e, idsubst)) body)) (List.tl sp_e))
     | Const x, loc when is_elim sigma x && not empty_sp ->
        (* may trigger an iota reduction *)
        Print.debug "Try ι-red on: %t" (Print.expr ctx e) ;
@@ -24,22 +24,22 @@ let norm ?(weak=false) =
     | Const x, loc ->
        begin match lookup_definition x sigma with
     	     | None -> if weak then e else 
-    			 join_head_spine ctx h_e (List.map (norm ctx) sp_e)
-    	     | Some e' -> norm ctx (join_head_spine ctx e' sp_e)
+    			 join_head_spine h_e (List.map (norm ctx) sp_e)
+    	     | Some e' -> norm ctx (join_head_spine e' sp_e)
        end
     | Subst (s, e'), loc ->
-       norm ctx (join_head_spine ctx (subst s e') sp_e)
+       norm ctx (join_head_spine (subst s e') sp_e)
     | Var _, loc
     | Free _, loc ->
        let sp_e = if weak then sp_e else List.map (norm ctx) sp_e in
-       join_head_spine ctx h_e sp_e
+       join_head_spine h_e sp_e
     | Universe _, loc when empty_sp ->  e
     | Universe _, loc -> Error.violation "Unexpected non-empty spine with a Universe head."
     | Pi a, loc when empty_sp -> Pi (norm_abstraction ctx a), loc
     | Pi a, loc -> Error.violation "Unexpected non-empty spine with a Pi head."
     | App _, _ -> Error.violation "Unexpected, head cannot be an application."
     | Ann (e, t), loc when empty_sp -> Ann(norm ctx e, norm ctx t), loc
-    | Ann (e, t), loc -> norm ctx (join_head_spine ctx e sp_e) (* removes annotation *)
+    | Ann (e, t), loc -> norm ctx (join_head_spine e sp_e) (* removes annotation *)
 			      
   and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak then a
@@ -56,14 +56,14 @@ let norm ?(weak=false) =
       | [] -> []
       | (e, t)::es when is_constr ctx el.t_name t ->
     	 Print.debug "Recs: recursive %t" (Print.expr ctx e) ;
-    	 (join_head_spine ctx (mk_const elim) (e::p::mvec)):: recs p mvec es
+    	 (join_head_spine (mk_const elim) (e::p::mvec)):: recs p mvec es
       | _::es -> recs p mvec es
     in
     let sp_len = List.length sp in
     let delim = Util.this (lookup_elim const sigma) in
     if delim.arity == sp_len then
       let x = norm ctx (List.nth sp 0) in	(* HACK ALERT *)
-      let x_hd, x_sp = split_head_spine ctx x in	(* c, Δᵢ *)
+      let x_hd, x_sp = split_head_spine x in	(* c, Δᵢ *)
       Print.debug "Scrutinee x = %t @ head x_hd = %t@ x_sp = @[[%t]@]"
     		  (Print.expr ctx x) (Print.expr ctx x_hd) (Print.sequence ~sep:" ;" (Print.expr ctx) x_sp) ;
       begin match x_hd with
@@ -78,7 +78,7 @@ let norm ?(weak=false) =
     	       let i = Util.this (lookup_constr_number x_name sigma) in
     	       let mi = List.nth mvec i in
     	       Print.debug "mi = %t" (Print.expr ctx mi) ;
-    	       Some (join_head_spine ctx mi (x_sp @ rs))
+    	       Some (join_head_spine mi (x_sp @ rs))
     	    | _ -> Print.debug "ι-red stuck on %t (scrutinee does not reduce)" (Print.expr ctx x) ;
     		   None
       end

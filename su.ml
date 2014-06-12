@@ -36,31 +36,19 @@ let set_telescope ctx t e f =
 (* Note: split and join head spine destroy location information, it'd
    be better to have a native spine based representation (TODO) *)
 
-let split_head_spine ctx e = 
+let split_head_spine e = 
   let rec split_head_spine (e, l) = match e with
     | App(e1, e2) -> let h, sp = split_head_spine e1 in h, (sp @ [e2])
     | _ -> (e, l), []
   in
-  let h, sp = split_head_spine e in
-  (* Print.debug "@@@@@@@@@@@@@@@@ Splitting e: @[%t@]@ into@ Head:@[%t@]@ Spine:@[[%t]@]" *)
-  (* 	      (Print.expr ctx e) *)
-  (* 	      (Print.expr ctx h) *)
-  (* 	      (Print.sequence ~sep:" ;" (Print.expr ctx) sp) ; *)
-  h, sp
+  split_head_spine e
 	       
-
-let join_head_spine ctx h sp =
-  let res = List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp in
-  (* Print.debug "XXXXXXXXXXXXXXXXXX JOIN Head:@[%t@]@ Spine:@[[%t]@]@ into e: @[%t@]" *)
-  (* 	      (Print.expr ctx h) *)
-  (* 	      (Print.sequence ~sep:" ;" (Print.expr ctx) sp)  *)
-  (* 	      (Print.expr ctx res) *)
-  (* ; *)
-  res
+let join_head_spine h sp =
+  List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp 
 
 (* Returns wether e constains the constant d in its head *)
 let is_constr ctx d e = 
-    let h, _ = split_head_spine ctx e in
+    let h, _ = split_head_spine e in
     match h with
     | Const c, l -> d = c
     | _ -> false
