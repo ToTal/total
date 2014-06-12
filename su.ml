@@ -38,19 +38,25 @@ let set_telescope ctx t e f =
 
 let split_head_spine ctx e = 
   let rec split_head_spine (e, l) = match e with
-    | App(e1, e2) -> let h, sp = split_head_spine e1 in h, (e2 :: sp)
+    | App(e1, e2) -> let h, sp = split_head_spine e1 in h, (sp @ [e2])
     | _ -> (e, l), []
   in
   let h, sp = split_head_spine e in
-  (* Print.debug "******* Splitting e: @[%t@]@ into@ Head:@[%t@]@ Spine:@[[%t]@]" *)
+  (* Print.debug "@@@@@@@@@@@@@@@@ Splitting e: @[%t@]@ into@ Head:@[%t@]@ Spine:@[[%t]@]" *)
   (* 	      (Print.expr ctx e) *)
   (* 	      (Print.expr ctx h) *)
-  (* 	      (Print.sequence ~sep:" ;" (fun e -> Print.expr ctx e) sp) ; *)
+  (* 	      (Print.sequence ~sep:" ;" (Print.expr ctx) sp) ; *)
   h, sp
 	       
 
-let join_head_spine h sp =
-  List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp
+let join_head_spine ctx h sp =
+  let res = List.fold_left (fun h sp -> Common.nowhere(App(h, sp))) h sp in
+  (* Print.debug "XXXXXXXXXXXXXXXXXX JOIN Head:@[%t@]@ Spine:@[[%t]@]@ into e: @[%t@]" *)
+  (* 	      (Print.expr ctx h) *)
+  (* 	      (Print.sequence ~sep:" ;" (Print.expr ctx) sp)  *)
+  (* 	      (Print.expr ctx res) *)
+  (* ; *)
+  res
 
 (* Returns wether e constains the constant d in its head *)
 let is_constr ctx d e = 

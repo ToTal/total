@@ -44,15 +44,15 @@ let rec infer (sigma, gamma as ctx) (e, loc) =
         if not (equal ctx s t2)
         then
           Error.typing ~loc:(snd e2) 
-            "this expresion has type@ %t@ but@ %t@ was expected"
-            (Print.expr ctx t2) (Print.expr ctx s)
+            "expresion %t has type@ %t@ but@ %t@ was expected"
+            (Print.expr ctx e2) (Print.expr ctx t2) (Print.expr ctx s)
         else
           mk_subst (Dot (e2, idsubst)) t
     | Ann (e1, e2) -> 
        let t = infer ctx e1 in 
        if equal ctx t e2 then t else
 	 Error.typing ~loc
-           "this expresion has type@ %t@ but@ %t@ was expected"
+           "this expresion has type@ %t@ but@ %t@ was expected(annotation)"
            (Print.expr ctx t) (Print.expr ctx e2)
 
 

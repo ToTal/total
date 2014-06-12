@@ -75,7 +75,7 @@ let options = Arg.align [
    Arg.Clear Config.pretty_print_arrow,
   " Use forall for non-dependent function types when pretty printing");
   ("--debug", 
-   Arg.Unit (fun _ -> Print.verbosity := Print.debug_verbosity),
+   Arg.Unit (fun _ -> Config.debug := true ; Print.verbosity := Print.debug_verbosity),
    " Print additional debug info (potential very verbose)");
 ]
 
@@ -103,10 +103,20 @@ let rec exec_cmd interactive sigma (d, loc) =
     | Input.Eval e ->
       let e = Desugar.desugar sigma e in
       let t = Norm.nf ctx (Typing.infer ctx e) in
-      let e = Norm.nf ctx e in
+      let e' = Norm.nf ctx e in
+      begin if !Config.debug then 
+	      let t' = Typing.infer ctx e' in 
+	      if not(Typing.equal ctx t t') then
+	      Error.runtime ~loc:(snd e) "Type preservation bug. e' = %t@ has type t' = %t expected t=%t"
+			  (Print.expr ctx e')
+			  (Print.expr ctx (Norm.nf ctx t')) 
+			  (Print.expr ctx (Norm.nf ctx t));
+	      ()
+
+      end; 
       if interactive then
          Format.printf "    = %t@\n    : %t@."
-		       (Print.expr ctx e)
+		       (Print.expr ctx e')
 		       (Print.expr ctx (Norm.nf ctx t)) ;
         sigma
     | Input.Context ->
