@@ -125,3 +125,13 @@ let names (sigma, gamma : signature * cctx) : string list =
        (ctx_fold 
 	  (fun ns (n,_) -> match Common.get_name n with | Some n -> n::ns |_ -> ns)
 	  [] gamma)
+
+let refresh_context (sigma, gamma) =
+  let rec refresh_context = function 
+    | Empty -> Empty, []
+    | Cons(gamma, (x, t)) -> 
+       let gamma', sofar = refresh_context gamma in
+       let x' = Beautify.refresh x sofar in
+       Cons(gamma' , (Common.some x', t)), x'::sofar
+  in
+  (sigma, fst(refresh_context gamma))

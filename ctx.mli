@@ -58,6 +58,8 @@ val index : loc:Common.position -> Common.name -> cctx -> int
 val lookup_idx_ty : loc:Common.position -> int -> cctx -> Syntax.expr
 val lookup_idx_name : loc:Common.position -> int -> cctx -> Common.variable
 
+
 (* Both *)
 
 val names : signature * cctx -> string list
+val refresh_context : signature * cctx -> signature * cctx

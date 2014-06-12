@@ -50,55 +50,58 @@ let var x = match Common.get_name x with
   | None -> "<fv>"
   | Some x -> "<"^x^">"
 
-(** [pi xs a ppf] prints abstraction [a] as dependent product using formatter [ppf]. *)
-let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
-  let xs = Ctx.names ctx in
-  if Syntax.occurs 0 e2 || (not !Config.pretty_print_arrow)
-  then
-    let x = Beautify.refresh x xs in
+let expr ctx =
+  (** [pi xs a ppf] prints abstraction [a] as dependent product using formatter [ppf]. *)
+  let rec pi ?max_level (sigma, gamma as ctx) (x, e1, e2) ppf =
+    let xs = Ctx.names ctx in
+    if Syntax.occurs 0 e2 || (not !Config.pretty_print_arrow)
+    then
+      let x = Beautify.refresh x xs in
       print ~at_level:3 ppf "forall %s :@ %t,@ %t" x (expr ctx e1) (expr (sigma, Ctx.extend gamma (Common.some x, e1)) e2)
-  else
-    print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Ctx.extend gamma (Common.none (), e1)) e2)
+    else
+      print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Ctx.extend gamma (Common.none (), e1)) e2)
 
-(** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
-and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
-  let x =
-    if Syntax.occurs 0 e2
-    then Beautify.refresh x (Ctx.names ctx)
-    else "_"
-  in
+  (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
+  and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
+    let x =
+      if Syntax.occurs 0 e2
+      then Beautify.refresh x (Ctx.names ctx)
+      else "_"
+    in
     print ~at_level:3 ppf 
 	  "fun %s :@ %t => %t" 
 	  x 
 	  (expr ctx e1) 
 	  (expr (sigma, Ctx.extend gamma (Common.some x, e1)) e2)
 
-(** [expr ctx e ppf] prints expression [e] using formatter [ppf]. *)
-and expr ?max_level (_sigma, gamma as ctx) e ppf =
-  let rec expr ?max_level (e, loc) ppf =  
-    let print ?at_level = print ?max_level ?at_level ppf in
+  (** [expr ctx e ppf] prints expression [e] using formatter [ppf]. *)
+  and expr ?max_level (_sigma, gamma as ctx) e ppf =
+    let rec expr ?max_level (e, loc) ppf =  
+      let print ?at_level = print ?max_level ?at_level ppf in
       if not (Format.over_max_boxes ()) then
         match e with
-          | Syntax.Var k -> 
-	     if !Config.pretty_print_db 
-	     then print "<%d>" k 
-	     else (match Common.get_name (Ctx.lookup_idx_name k gamma ~loc) with
-		   | None -> print "<%d>" k (* Printing the index for unnamed vars when printing open terms. *)
-		   | Some x -> print "%s" x)
-	  | Syntax.Free v -> print "%s" (var v)
-	  | Syntax.Const x -> print "%s" x
-          | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
-          | Syntax.Universe u -> print ~at_level:1 "Type %d" u
-          | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
-          | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
-          | Syntax.App (e1, e2) ->
-            print ~at_level:1 "%t@ %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
-          | Syntax.Ann (e1, e2) ->
-            print ~at_level:1 "%t@ : %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
+        | Syntax.Var k -> 
+	   if !Config.pretty_print_db 
+	   then print "<%d>" k 
+	   else (match Common.get_name (Ctx.lookup_idx_name k gamma ~loc) with
+		 | None -> Error.violation "Variable contains no name, or index out of bounds (This cannot happen)"
+		 | Some x -> print "%s" x)
+	| Syntax.Free v -> print "%s" (var v)
+	| Syntax.Const x -> print "%s" x
+        | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
+        | Syntax.Universe u -> print ~at_level:1 "Type %d" u
+        | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
+        | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
+        | Syntax.App (e1, e2) ->
+           print ~at_level:1 "%t@ %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
+        | Syntax.Ann (e1, e2) ->
+           print ~at_level:1 "%t@ : %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
 
-  in
+    in
     expr ?max_level e ppf
-    
+  in
+  expr (Ctx.refresh_context ctx)
+
 (* let tele ctx (tel : Syntax.telescope) ppf =  *)
 (*   let rec tele (sigma, gamma as ctx) tel ppf =  *)
 (*     match tel with *)
