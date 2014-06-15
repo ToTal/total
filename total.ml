@@ -107,10 +107,11 @@ let rec exec_cmd interactive sigma (d, loc) =
       begin if !Config.debug then 
 	      let t' = Typing.infer ctx e' in 
 	      if not(Typing.equal ctx t t') then
-	      Error.runtime ~loc:(snd e) "Type preservation bug. e' = %t@ has type t' = %t expected t=%t"
-			  (Print.expr ctx e')
-			  (Print.expr ctx (Norm.nf ctx t')) 
-			  (Print.expr ctx (Norm.nf ctx t));
+	      Error.runtime ~loc:(snd e) 
+			    "Type preservation bug. e' = %t@ has type t' = %t expected t=%t"
+			    (Print.expr ctx e')
+			    (Print.expr ctx (Norm.nf ctx t')) 
+			    (Print.expr ctx (Norm.nf ctx t));
 	      ()
 
       end; 
@@ -129,7 +130,10 @@ let rec exec_cmd interactive sigma (d, loc) =
           | (x, Elim el) ->
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) el.t)
           | (x, Definition (t, e)) ->
-            Format.printf "@[%s = %t@]@\n    : %t@." x (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t))
+            Format.printf "@[%s = %t@]@\n    : %t@." 
+			  x 
+			  (Print.expr (ctx_from sigma) e) 
+			  (Print.expr (ctx_from sigma) t))
 	(combine sigma);
       sigma
     | Input.Axiom (x, t) ->
