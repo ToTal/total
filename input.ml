@@ -24,3 +24,4 @@ and directive' =
   | Check of expr
   | Eval of expr
   | Inductive of Common.name * expr * (Common.name * expr) list
+  | Option of string

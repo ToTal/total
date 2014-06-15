@@ -1,3 +1,3 @@
-true : annot, use_menhir, use_ocamlfind
+true : annot, use_menhir, use_ocamlfind, use_str
 
 <*.{native,byte}> : use_unix

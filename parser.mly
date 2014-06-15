@@ -23,7 +23,8 @@
 %token LPAREN RPAREN
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE
+%token QUIT HELP AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE 
+%token <string> OPTION
 %token EOF
 
 %start <Input.directive list> directives
@@ -56,6 +57,8 @@ plain_directive:
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
     { Inductive (x,  e, cs)}
+  | opt = OPTION
+    { Option opt }
 
 constructor :
   | BAR c = NAME COLON e = expr

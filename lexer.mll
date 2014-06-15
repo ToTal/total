@@ -32,6 +32,7 @@ rule token = parse
   | '\n'                { Lexing.new_line lexbuf; token lexbuf }
   | [' ' '\r' '\t']     { token lexbuf }
   | numeral             { NUMERAL (int_of_string (Lexing.lexeme lexbuf)) }
+  | "Option"            { option lexbuf}
   | name                { let s = Lexing.lexeme lexbuf in
                             try
                               List.assoc s reserved
@@ -56,9 +57,14 @@ and comments level = parse
   | "*)"                { if level = 0 then token lexbuf else comments (level-1) lexbuf }
   | "(*"                { comments (level+1) lexbuf }
   | '\n'                { Lexing.new_line lexbuf; comments level lexbuf }
-  | _ { comments level lexbuf }
-  | eof { print_endline "comments are not closed";
-	  raise End_of_file }
+  | _                   { comments level lexbuf }
+  | eof                 { print_endline "comments are not closed";
+			  raise End_of_file }
+
+and option = parse
+  | [^'\n''.']*         { OPTION (Lexing.lexeme lexbuf) }
+  | '.'                 { PERIOD }
+  | '\n'                { Lexing.new_line lexbuf; token lexbuf }
 
 {
   let read_file parser fn =

@@ -19,6 +19,7 @@ Definition <indent> : <expr> := <expr>. define <ident> of type <expr> to be <exp
 Check <expr>                            infer the type of expression <expr>
 Eval <expr>.                            normalize expression <expr>
 Context.                                print current contex    
+Option <string>                         set command line options in <string>
 Help.                                   print this help
 Quit.                                   exit
 
@@ -176,6 +177,11 @@ let rec exec_cmd interactive sigma (d, loc) =
        let sigma = Inductive.elim sigma x t cs in
        if interactive then
        	 Format.printf "%s is defined@." x ;
+       sigma
+    | Input.Option opt -> 
+       let curr = ref 0 in
+       let argv = Array.of_list ("foo"::Str.split (Str.regexp " ") (String.trim opt)) in
+       Arg.parse_argv ~current:curr argv options anonymous usage ;
        sigma
     | Input.Help ->
       print_endline help_text ; sigma
