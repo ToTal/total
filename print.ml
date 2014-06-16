@@ -121,8 +121,8 @@ let message ?(loc=Common.Nowhere) msg_type v =
   if v <= !verbosity then
     begin
       (match loc with
-       | Common.Nowhere -> Format.eprintf "%s :@\n  @[" msg_type 
-       | _ -> Format.eprintf "%s at %t:@\n  @[" msg_type (position loc)) ;
+       | Common.Nowhere -> Format.eprintf "%s: @[" msg_type 
+       | _ -> Format.eprintf "%s at %t:@  @[" msg_type (position loc)) ;
       Format.kfprintf (fun ppf -> Format.fprintf ppf "@]@.") Format.err_formatter
     end
   else
@@ -130,4 +130,4 @@ let message ?(loc=Common.Nowhere) msg_type v =
 
 let error (loc, err_type, msg) = message ~loc (err_type) 1 "%s" msg
 let warning msg = message "** Warning" warning_verbosity msg
-let debug msg = message "*** Debug" debug_verbosity msg
+let debug msg = message "DBG" debug_verbosity msg
