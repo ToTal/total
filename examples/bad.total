@@ -1,0 +1,13 @@
+Inductive empty : Type 0 := .
+
+Inductive bad : Type 0 :=
+| Con : (bad -> empty) -> bad
+.
+
+Definition t1 : bad -> empty := fun x : bad =>
+ bad-elim x (fun x : bad => empty) (fun x0 : bad -> empty => x0 x)
+.
+
+Definition t2 : empty := t1 (Con t1).
+
+Context.
