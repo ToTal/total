@@ -51,12 +51,9 @@ let motive_ty sigma d t =
   let ctx = ctx_from sigma in
   Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
   let params,_ = get_telescope ctx t in
-  let d' = set_telescope ctx params (nw (Const d)) (fun x _ e -> nw (App (e, var x))) in
-  let p = List.fold_left 
-	    (fun v (x, t) -> nw(Pi (x, t, var_to_db x v))) 
-	    (nw (Universe 0)) 
-	    ((Common.none_with "D", d')::params)
-  in
+  let d' = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) params) in
+
+  let p = set_telescope ctx ((Common.none_with "D", d')::params) (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
   Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
   p
 
@@ -97,7 +94,7 @@ let method_ty sigma d t c ct p_nm =
   let p' = constructor_params_for p constr in
   Print.debug "What I want to know is: %t" (Print.expr ctx constr) ;
 
-  let result = nw (App (p', List.fold_left (fun e (n, _) -> nw(App(e, nw(Free n)))) (nw (Const c)) constr_tel)) in
+  let result = nw (App (p', join_head_spine (nw (Const c)) (List.map (fun (x, _) -> var x) constr_tel))) in
 
   let m = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
@@ -118,11 +115,11 @@ let elim sigma d t cs =
   	     cs
   in
 
-  let x_dest = set_telescope ctx targets (nw (Const d)) (fun v _ e -> nw (App(e, var v))) in
+  let x_dest = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) targets) in
 
   let final_tel = ms @ ((p_nm, p) ::(x, x_dest) :: targets) in
 
-  let result = set_telescope ctx (List.rev ((x, x_dest)::targets)) (var p_nm) (fun v _ e -> nw(App(e, var v))) in
+  let result = join_head_spine (var p_nm) (List.map (fun (x,_) -> var x) (List.rev ((x, x_dest)::targets))) in
 
   Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
   Print.debug "Eliminator telescope: %t" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) final_tel) ;
