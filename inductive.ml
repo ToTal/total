@@ -61,9 +61,12 @@ let method_ty sigma d t c ct p_nm =
   let rec constructor_params_for p = function
     | App (e1, e2), l -> App(constructor_params_for p e1, e2), l
     | Const _, l -> (fst p), l
-    | _ -> Error.violation "Pum"
+    | _ -> Error.violation "This is not happening"
   in
-
+  let rec produces_constr ctx c = function
+    | Pi (_,_, e),_ -> produces_constr ctx c e
+    | e -> is_constr ctx c e
+  in
   let ctx = ctx_from sigma in
   Print.debug "Computing method : %s" c ;
   (* The term that contains P *)
@@ -75,17 +78,24 @@ let method_ty sigma d t c ct p_nm =
   Print.debug "constr_tel = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) constr_tel) ;
 
   (* The parameters that represent a recursive call *)
-  let recs = List.filter (fun (x, t) -> is_constr ctx d t) constr_tel in
+  let recs = List.filter (fun (x, t) -> produces_constr ctx d t) constr_tel in
+  (* let recs = List.filter (fun (x, t) -> is_constr ctx d t) constr_tel in *)
 
   Print.debug "t = %t" (Print.expr ctx t) ;
   Print.debug "d = %s" d ;
-  Print.debug "len(recs) = %d" (List.length recs) ;
+  Print.debug "recs = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) recs) ;
 
   let hyps = List.map 
 	       (fun (x, t) -> 
 		Common.none_with "r", 
-		nw 
-		  (App (constructor_params_for p t, var x))) (* HERE *)
+		let t_tel, t_body = get_telescope ctx t in
+		Print.debug "t_tel = %t" (Print.tele ctx t_tel) ;
+		Print.debug "t_body = %t" (Print.expr ctx t_body) ;
+		let r_app = join_head_spine (var x) (List.map (fun (y,_) -> var y) t_tel) in
+		set_telescope ctx 
+			      t_tel
+			      (nw(App (constructor_params_for p t_body, r_app)))
+			      (fun x t e -> nw(Pi(x,t,e))))
 	       recs
   in
   let final_tel = hyps @ (List.rev constr_tel) in (* I'm confused about this List.rev *)
@@ -127,12 +137,12 @@ let elim sigma d t cs =
 
   let elim_ty = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
 
-   let kind = Typing.infer ctx elim_ty in
-   if not (is_kind ctx (Norm.whnf ctx kind)) then
-     Error.violation (* ~loc:(snd elim_ty)  *)
-  		     "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
-  		     (Print.expr ctx elim_ty) (Print.expr ctx kind);
-
+  let kind = Typing.infer ctx elim_ty in
+  if not (is_kind ctx (Norm.whnf ctx kind)) then
+    Error.violation (* ~loc:(snd elim_ty)  *)
+      "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
+      (Print.expr ctx elim_ty) (Print.expr ctx kind);
+  
   Ctx.add_elim (d^"-elim") elim_ty d sigma
 
 
