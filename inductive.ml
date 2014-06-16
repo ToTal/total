@@ -63,10 +63,6 @@ let method_ty sigma d t c ct p_nm =
     | Const _, l -> (fst p), l
     | _ -> Error.violation "This is not happening"
   in
-  let rec produces_constr ctx c = function
-    | Pi (_,_, e),_ -> produces_constr ctx c e
-    | e -> is_constr ctx c e
-  in
   let ctx = ctx_from sigma in
   Print.debug "Computing method : %s" c ;
   (* The term that contains P *)

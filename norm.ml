@@ -54,9 +54,14 @@ let norm ?(weak=false) =
       Print.debug "Called recs on di:[%t](2)" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) di);
       match di with
       | [] -> []
-      | (e, t)::es when is_constr ctx el.t_name t ->
-    	 Print.debug "Recs: recursive %t" (Print.expr ctx e) ;
-    	 (join_head_spine (mk_const elim) (e::p::mvec)):: recs p mvec es
+      | (r, t)::es when produces_constr ctx el.t_name t ->
+    	 Print.debug "Recs: recursive %t with type %t" (Print.expr ctx r) (Print.expr ctx t);
+	 let t_tel, e_body = get_telescope ctx t in
+	 let r' = join_head_spine r (List.map (fun (x, _) -> var x) t_tel) in
+    	 (set_telescope ctx 
+			t_tel 
+			(join_head_spine (mk_const elim) (r'::p::mvec)) 
+			(fun x t e -> mk_lambda(x,t,e))):: recs p mvec es
       | _::es -> recs p mvec es
     in
     let sp_len = List.length sp in

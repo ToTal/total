@@ -53,3 +53,8 @@ let is_constr ctx d e =
     | Const c, l -> d = c
     | _ -> false
 
+(* Returns wether e contains the constant d after some Pi abstractions *)
+let rec produces_constr ctx c = function
+  | Pi (_,_, e),_ -> produces_constr ctx c e
+  | e -> is_constr ctx c e
+
