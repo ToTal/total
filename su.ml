@@ -16,10 +16,10 @@ let get_telescope ctx e =
     | rest -> [], rest
   in
   let tel, e' = get_telescope e in
-  Print.debug "******* Get telescope of e: @[%t@]@ into@ tel:@[[%t]@]@ rest:@[%t@]"
-  	      (Print.expr ctx e)
-  	      (Print.sequence ~sep:" ;" (fun (_, e) -> Print.expr ctx e) tel)
-  	      (Print.expr ctx e') ;
+  (* Print.debug "******* Get telescope of e: @[%t@]@ into@ tel:@[[%t]@]@ rest:@[%t@]" *)
+  (* 	      (Print.expr ctx e) *)
+  (* 	      (Print.sequence ~sep:" ;" (fun (_, e) -> Print.expr ctx e) tel) *)
+  (* 	      (Print.expr ctx e') ; *)
   tel, e'
 
 let set_telescope ctx t e f =
