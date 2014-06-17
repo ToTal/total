@@ -22,7 +22,25 @@ let rec constructs_type x = function
   | Const x',_ when x = x' -> true
   | _ -> false
 
-let positive t x = true 	(* TODO implement this! *)
+let positive ctx t x = 
+  let rec appears = function
+    | Const x', _ -> x = x'
+    | Var _, _ | Free _, _ | Universe _, _ -> false
+    | Subst (s, e), _ -> appears e || sapp s
+    | Pi (_, t, e), _ | Lambda (_, t, e), _ -> appears t || appears e
+    | App (e1, e2),_ | Ann (e1,e2),_ -> appears e1 || appears e2
+  and sapp = function
+    | Shift _ -> false
+    | Dot (e, s) -> appears e || sapp s
+  in
+  let appears_on_the_left = function
+    | Pi(_,t,_), _ -> appears t
+    | _ -> false
+  in
+  let t_tel, _ = get_telescope ctx t in
+  List.fold_left 
+    (fun res (_, t) -> res && not (appears_on_the_left t)) 
+    true t_tel
 
 let validate_constrs (sigma : Ctx.signature) 
 		 (x : Common.name) 
@@ -39,8 +57,9 @@ let validate_constrs (sigma : Ctx.signature)
       Error.typing ~loc:(snd t)
     		   "constructor %s does not construct a type (%t has type %t)"
     		   c (Print.expr ctx t) (Print.expr ctx k) ;
-    if not (positive t x) then
-      Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
+    if !Config.check_positivity then
+      if not (positive ctx t x) then
+	Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
     (Ctx.add_constr c t n sigma, n+1)
   in
   fst(List.fold_left elab (sigma, 0) (List.rev cs)) (* TODO use fold_right? *)

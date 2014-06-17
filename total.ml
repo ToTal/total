@@ -75,6 +75,12 @@ let options = Arg.align [
   ("--arroff",
    Arg.Clear Config.pretty_print_arrow,
   " Use forall for non-dependent function types when pretty printing");
+  ("--pos",
+   Arg.Set Config.check_positivity,
+   " Check inductive definitions for strict positivity");
+  ("--nopos",
+   Arg.Unit (fun _ -> Config.check_positivity := false ; Config.totality_is_tainted := true),
+   " Do not check inductive definitions for strict positivity");
   ("--debug", 
    Arg.Unit (fun _ -> Config.debug := true ; Print.verbosity := Print.debug_verbosity),
    " Print additional debug info (potential very verbose)");
@@ -167,7 +173,7 @@ let rec exec_cmd interactive sigma (d, loc) =
        let sigma = Inductive.elab_type_constr sigma x t in
        let cs = List.fold_left
        		  (fun cs' (c, t) ->
-       		   if c == x then Error.typing ~loc "constructor %s clashes with type name" c ;
+       		   if c = x then Error.typing ~loc "constructor %s clashes with type name" c ;
        		   if List.mem_assoc c cs' then Error.typing ~loc "%s aleardy exists" c ;
        		   if Ctx.mem c sigma then Error.typing ~loc "%s aleardy exists" c ;
        		   (c, Desugar.desugar sigma t)::cs')
@@ -185,6 +191,8 @@ let rec exec_cmd interactive sigma (d, loc) =
        sigma
     | Input.Help ->
       print_endline help_text ; sigma
+    | Input.Version -> 
+       Version.print_version () ; sigma
     | Input.Quit -> exit 0
 
 (** Load directives from the given file. *)
@@ -199,8 +207,7 @@ let toplevel sigma =
     | "Win32" -> "Ctrl-Z"
     | _ -> "EOF"
   in
-  print_endline Version.logo_alt;
-  print_endline ("Version: " ^ Version.version);
+  Version.print_version () ;
   print_endline ("[Type " ^ eof ^ " to exit or \"Help.\" for help.]");
   try
     let sigma = ref sigma in

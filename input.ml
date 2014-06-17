@@ -18,6 +18,7 @@ type directive = directive' * Common.position
 and directive' =
   | Quit
   | Help
+  | Version
   | Context
   | Axiom of Common.name * expr
   | Definition of Common.name * expr option * expr

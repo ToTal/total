@@ -14,6 +14,7 @@
     ("Definition", DEFINITION) ;
     ("Eval", EVAL) ;
     ("Help", HELP) ;
+    ("Version", VERSION) ;
     ("Quit",  QUIT) ;
     ("Axiom", AXIOM);
     ("Context", CONTEXT) ;

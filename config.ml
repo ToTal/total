@@ -6,3 +6,11 @@ let pretty_print_db = ref false
 
 (* Is debug on? *)
 let debug = ref false
+
+(* Positivity check on *)
+
+let check_positivity = ref true
+
+(* Are programs total? *)
+
+let totality_is_tainted = ref false

@@ -66,7 +66,7 @@ let norm ?(weak=false) =
     in
     let sp_len = List.length sp in
     let delim = Util.this (lookup_elim const sigma) in
-    if delim.arity == sp_len then
+    if delim.arity = sp_len then
       let x = norm ctx (List.nth sp 0) in	(* HACK ALERT *)
       let x_hd, x_sp = split_head_spine x in	(* c, Δᵢ *)
       Print.debug "Scrutinee x = %t @ head x_hd = %t@ x_sp = @[[%t]@]"
