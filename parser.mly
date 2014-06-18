@@ -17,13 +17,13 @@
 
 %}
 
-%token FORALL FUN TYPE
+%token FORALL FUN TYPE IMPOSSIBLE
 %token <int> NUMERAL
 %token <string> NAME
 %token LPAREN RPAREN
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP VERSION AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE 
+%token QUIT HELP VERSION AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE RECURSIVE
 %token <string> OPTION
 %token EOF
 
@@ -55,6 +55,8 @@ plain_directive:
     { Eval e}
   | DEFINITION x = NAME t = option(preceded(COLON,expr)) COLONEQUAL e = expr
     { Definition (x, t, e) }
+  | RECURSIVE f = NAME COLON t = expr COLONEQUAL cs = clause*
+    { Recursive (f, t, cs) }
   | CONTEXT
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
@@ -65,6 +67,12 @@ plain_directive:
 constructor :
   | BAR c = NAME COLON e = expr
     { (c, e) }
+
+clause :
+  | BAR ps = simple_expr* DARROW e = expr
+    { Clause (ps, e) }
+  | BAR ps = simple_expr* IMPOSSIBLE x = NAME
+    { Impossible (ps, x) }
 
 (* Main syntax tree *)
 expr: mark_position(plain_expr) { $1 }

@@ -7,11 +7,13 @@
     ("forall", FORALL);
     ("fun", FUN);
     ("Type", TYPE);
+    ("impossible", IMPOSSIBLE);
   ]
 
   let directives = [
     ("Check", CHECK) ;
     ("Definition", DEFINITION) ;
+    ("Recursive", RECURSIVE) ;
     ("Eval", EVAL) ;
     ("Help", HELP) ;
     ("Version", VERSION) ;

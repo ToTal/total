@@ -184,6 +184,10 @@ let rec exec_cmd interactive sigma (d, loc) =
        if interactive then
        	 Format.printf "%s is defined@." x ;
        sigma
+    | Input.Recursive (f, _, _) ->
+       Format.printf "%s was seen@." f ; 
+       (* TODO implement this part *)
+       sigma
     | Input.Option opt -> 
        let curr = ref 0 in
        let argv = Array.of_list ("foo"::Str.split (Str.regexp " ") (String.trim opt)) in

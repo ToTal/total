@@ -13,6 +13,10 @@ and expr' =
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. *)
 and abstraction = Common.variable * expr * expr
 
+and clause = 
+  | Clause of expr list * expr
+  | Impossible of expr list * Common.name
+
 (** Toplevel directives. *)
 type directive = directive' * Common.position
 and directive' =
@@ -22,6 +26,7 @@ and directive' =
   | Context
   | Axiom of Common.name * expr
   | Definition of Common.name * expr option * expr
+  | Recursive of Common.name * expr * clause list
   | Check of expr
   | Eval of expr
   | Inductive of Common.name * expr * (Common.name * expr) list
