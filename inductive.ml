@@ -16,10 +16,11 @@ let elab_type_constr sigma x t =
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
   Ctx.add_constr x t 0 sigma 	(* type constructor is number 0 *)
 
-let rec constructs_type x = function
-  | Pi (_,_,e),_ -> constructs_type x e
-  | App ((Const x', _), _),_ when x = x' -> true
-  | Const x',_ when x = x' -> true
+let constructs_type x t = 
+  let _tel, body = get_telescope t in
+  let h, _sp = split_head_spine body in
+  match h with 
+  | Const x',_  -> x = x'
   | _ -> false
 
 let positive ctx t x = 
@@ -37,7 +38,7 @@ let positive ctx t x =
     | Pi(_,t,_), _ -> appears t
     | _ -> false
   in
-  let t_tel, _ = get_telescope ctx t in
+  let t_tel, _ = get_telescope t in
   List.fold_left 
     (fun res (_, t) -> res && not (appears_on_the_left t)) 
     true t_tel
@@ -69,10 +70,10 @@ let nw = Common.nowhere
 let motive_ty sigma d t = 
   let ctx = ctx_from sigma in
   Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
-  let params,_ = get_telescope ctx t in
+  let params,_ = get_telescope t in
   let d' = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) params) in
 
-  let p = set_telescope ctx ((Common.none_with "D", d')::params) (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
+  let p = set_telescope ((Common.none_with "D", d')::params) (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
   Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
   p
 
@@ -88,7 +89,7 @@ let method_ty sigma d t c ct p_nm =
   let p = var p_nm in
   
   (* All the constructor's parameters *)
-  let constr_tel, constr = get_telescope ctx ct in
+  let constr_tel, constr = get_telescope ct in
   Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
   Print.debug "constr_tel = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) constr_tel) ;
 
@@ -103,11 +104,11 @@ let method_ty sigma d t c ct p_nm =
   let hyps = List.map 
 	       (fun (x, t) -> 
 		Common.none_with "r", 
-		let t_tel, t_body = get_telescope ctx t in
+		let t_tel, t_body = get_telescope t in
 		Print.debug "t_tel = %t" (Print.tele ctx t_tel) ;
 		Print.debug "t_body = %t" (Print.expr ctx t_body) ;
 		let r_app = join_head_spine (var x) (List.map (fun (y,_) -> var y) t_tel) in
-		set_telescope ctx 
+		set_telescope 
 			      t_tel
 			      (nw(App (constructor_params_for p t_body, r_app)))
 			      (fun x t e -> nw(Pi(x,t,e))))
@@ -121,14 +122,14 @@ let method_ty sigma d t c ct p_nm =
 
   let result = nw (App (p', join_head_spine (nw (Const c)) (List.map (fun (x, _) -> var x) constr_tel))) in
 
-  let m = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let m = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
 let elim sigma d t cs = 
   let ctx = ctx_from sigma in
   Print.debug "Computing eliminator for %s" d ;
-  let targets, _ = get_telescope ctx t in
+  let targets, _ = get_telescope t in
   let x = Common.none_with "x" in
 
   let p_nm = Common.none_with "P" in
@@ -150,7 +151,7 @@ let elim sigma d t cs =
   Print.debug "Eliminator telescope: %t" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) final_tel) ;
   Print.debug "result = %t" (Print.expr ctx result) ;
 
-  let elim_ty = set_telescope ctx final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
 
   let kind = Typing.infer ctx elim_ty in
   if not (is_kind ctx (Norm.whnf ctx kind)) then

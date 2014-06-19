@@ -7,7 +7,7 @@ open Ctx
     It returns a function that given a expression, returns a value  *)
 type telescope = (Common.variable * expr) list
 
-let get_telescope ctx e = 
+let get_telescope e = 
   let rec get_telescope : expr -> telescope * expr = function
     | Pi (x, t, e),loc -> 
        let tel, rest = get_telescope (top_db_to_var x e) in
@@ -15,23 +15,13 @@ let get_telescope ctx e =
     | Lambda _,_ -> Error.violation "Lambda found in a telescope, add?"
     | rest -> [], rest
   in
-  let tel, e' = get_telescope e in
-  (* Print.debug "******* Get telescope of e: @[%t@]@ into@ tel:@[[%t]@]@ rest:@[%t@]" *)
-  (* 	      (Print.expr ctx e) *)
-  (* 	      (Print.sequence ~sep:" ;" (fun (_, e) -> Print.expr ctx e) tel) *)
-  (* 	      (Print.expr ctx e') ; *)
-  tel, e'
+  get_telescope e 
 
-let set_telescope ctx t e f =
+let set_telescope t e f =
   let rec set_telescope (t : telescope) (e : expr) (f : Common.variable -> expr -> expr -> expr ) : expr =
     List.fold_left (fun e (x, t) -> f x t (var_to_db x e)) e t
   in
-  let e' = set_telescope t e f in
-  (* Print.debug "####### Set telescope tel: @[[%t@]]@ and@ rest:@[%t@]@ into:@[%t@]" *)
-  (* 	      (Print.sequence ~sep:" ;" (fun (_, e) -> Print.expr ctx e) t) *)
-  (* 	      (Print.expr ctx e) *)
-  (* 	      (Print.expr ctx e') ; *)
-  e'
+  set_telescope t e f
 
 (* Note: split and join head spine destroy location information, it'd
    be better to have a native spine based representation (TODO) *)

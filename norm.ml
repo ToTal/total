@@ -56,9 +56,9 @@ let norm ?(weak=false) =
       | [] -> []
       | (r, t)::es when produces_constr ctx el.t_name t ->
     	 Print.debug "Recs: recursive %t with type %t" (Print.expr ctx r) (Print.expr ctx t);
-	 let t_tel, e_body = get_telescope ctx t in
+	 let t_tel, e_body = get_telescope t in
 	 let r' = join_head_spine r (List.map (fun (x, _) -> var x) t_tel) in
-    	 (set_telescope ctx 
+    	 (set_telescope 
 			t_tel 
 			(join_head_spine (mk_const elim) (r'::p::mvec)) 
 			(fun x t e -> mk_lambda(x,t,e))):: recs p mvec es
@@ -73,7 +73,7 @@ let norm ?(weak=false) =
     		  (Print.expr ctx x) (Print.expr ctx x_hd) (Print.sequence ~sep:" ;" (Print.expr ctx) x_sp) ;
       begin match x_hd with
     	    | Const x_name, _ ->
-    	       let sp_types = let tel,_ = get_telescope ctx (lookup_ty x_name sigma) in List.map snd tel in
+    	       let sp_types = let tel,_ = get_telescope (lookup_ty x_name sigma) in List.map snd tel in
     	       Print.debug "sp_types = @[[%t]@]" (Print.sequence ~sep:" ;" (Print.expr ctx) sp_types) ;
     	       let p = List.nth sp 1 in
     	       Print.debug "p = %t" (Print.expr ctx p) ;
