@@ -148,7 +148,10 @@ let rec exec_cmd interactive sigma (d, loc) =
           | (x, Axiom t) ->
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Constr (t, n)) ->
-            Format.printf "@[(%d)%s : %t@]@." n x (Print.expr (ctx_from sigma) t)
+	     if !Config.debug then 
+               Format.printf "@[(%d)%s : %t@]@." n x (Print.expr (ctx_from sigma) t)
+	     else
+	       Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
           | (x, Elim el) ->
             Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) el.t)
           | (x, Definition (t, e)) ->
