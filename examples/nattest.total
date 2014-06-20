@@ -1,0 +1,32 @@
+Inductive nat : Type 0 := 
+| Z : nat 
+| S : nat -> nat
+.
+
+Inductive eq_nat : nat -> nat -> Type 0 :=
+| refl : forall (n : nat), eq_nat n n
+. 
+	 
+
+Definition plus : nat -> nat -> nat :=
+fun m : nat =>  fun n : nat => 
+  nat-elim m 
+    (fun x : nat => nat)
+    n 
+    (fun nn : nat => fun prec : nat => S prec)
+.
+
+
+Definition  zero := Z.
+Definition   one := S Z.
+Definition   two := S one.
+Definition three := S two.
+Definition  four := S three.
+Definition  five := S four.
+Definition   six := S five.
+
+Definition t0 : eq_nat zero (plus Z Z) := refl zero.
+Definition t1 : eq_nat one (plus Z (S Z)) := refl one.
+Definition t15 : eq_nat one (S (plus Z Z)) := refl one.
+Definition t2 : eq_nat one (plus (S Z) Z) := refl one. 
+Definition t3 : eq_nat two (plus (S Z) (S Z)) := refl (plus (S (S Z)) Z).
