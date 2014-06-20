@@ -65,19 +65,17 @@ let validate_constrs (sigma : Ctx.signature)
   in
   fst(List.fold_right elab (List.rev cs) (sigma, 0))
 
-let nw = Common.nowhere
-
 (** Computes the induction hypothesis *)
 let motive_ty sigma d t = 
   let ctx = ctx_from sigma in
   Print.debug "Building motive for type %s : %t" d (Print.expr ctx t);
   let params,_ = get_telescope t in
-  let d' = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) params) in
+  let d' = join_head_spine (mk_const d) (List.map (fun (x, _) -> var x) params) in
 
   let p_tel = params @ [(Common.none_with "D", d')] in
   Print.debug "Telescope for P : [%t]" (Print.tele ctx p_tel) ;
 
-  let p = set_telescope p_tel (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
+  let p = set_telescope p_tel (mk_universe 0) (fun x t e -> mk_pi(x, t, e)) in
   Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
   p
 
@@ -112,8 +110,8 @@ let method_ty sigma d t c ct p_nm =
 		let r_app = join_head_spine (var x) (List.map (fun (y,_) -> var y) t_tel) in
 		set_telescope 
 			      t_tel
-			      (nw(App (constructor_params_for p t_body, r_app)))
-			      (fun x t e -> nw(Pi(x,t,e))))
+			      (mk_app (constructor_params_for p t_body) r_app)
+			      (fun x t e -> mk_pi(x,t,e)))
 	       recs
   in
   let final_tel = constr_tel @ hyps (* @ constr_tel *) in 
@@ -122,9 +120,9 @@ let method_ty sigma d t c ct p_nm =
   let p' = constructor_params_for p constr in
   Print.debug "What I want to know is: %t" (Print.expr ctx constr) ;
 
-  let result = nw (App (p', join_head_spine (nw (Const c)) (List.map (fun (x, _) -> var x) constr_tel))) in
+  let result = mk_app p' (join_head_spine (mk_const c) (List.map (fun (x, _) -> var x) constr_tel)) in
 
-  let m = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let m = set_telescope final_tel result (fun v t e -> mk_pi (v, t, e)) in
   Print.debug "For %s method: %t" c (Print.expr ctx m) ;
   m
 
@@ -145,7 +143,7 @@ let elim sigma d t cs =
 
   in
 
-  let x_dest = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) targets) in
+  let x_dest = join_head_spine (mk_const d) (List.map (fun (x, _) -> var x) targets) in
 
   let final_tel = targets @ [(x, x_dest) ; (p_nm, p)] @ ms in
 
@@ -155,7 +153,7 @@ let elim sigma d t cs =
   Print.debug "Eliminator telescope: %t" (Print.tele ctx final_tel) ;
   Print.debug "result = %t" (Print.expr ctx result) ;
 
-  let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
+  let elim_ty = set_telescope final_tel result (fun v t e -> mk_pi (v, t, e)) in
 
   Print.debug "Final eliminator = %t" (Print.expr ctx elim_ty) ;
 
