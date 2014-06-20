@@ -1,0 +1,34 @@
+Inductive nat : Type 0 :=
+| Z : nat 
+| S  : nat -> nat
+.
+
+Inductive Fin : nat -> Type 0 := 
+| F_z : forall n : nat , Fin (S n)
+| F_s : forall n : nat, Fin n -> Fin (S n)
+.
+
+Inductive leq : forall n : nat, Fin n -> Fin n -> Type 0 :=
+| leqz : forall (n : nat) (j : Fin (S n)),  leq (S n) (F_z n) j
+| leqs : forall (n : nat) (i : Fin n) (j : Fin n) (p : leq n i j), leq (S n) (F_s n i) (F_s n j)
+.
+
+Recursive trans : forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq i j) (q : leq j k), leq i k :=
+| n i j k (leqz n j) q => leqz n k
+| n i j k (leqs n i' j' p') (leqs n j' k' q') => leqs n i' k' (trans p' q')
+.
+
+(* Proposed syntax for splitting trees
+
+Split trans : forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq i j) (q : leq j k), leq i k :=
+on p : leq i j yielding
+| n i j k (leqz n j) q => leqz n j
+| n i j k (leqs n i' j' p') q =>
+  (on q : (leq (F_s n j) k) yielding
+  | n i j k (leqs n i' j' p') (leq z) impossible q
+  | n i j k (leqs n i' j' p') (leqs n j k q') => leqs n j k (trans n j k p' q'))
+.
+
+*) 
+
+Context.
