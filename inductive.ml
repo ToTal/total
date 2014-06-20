@@ -47,7 +47,7 @@ let validate_constrs (sigma : Ctx.signature)
 		 (x : Common.name) 
 		 (t : Syntax.expr) 
 		 (cs : (Common.name * Syntax.expr) list) =
-  let elab (sigma, n) (c, t) = 
+  let elab (c, t) (sigma, n) = 
     let ctx = ctx_from sigma in
     if not (constructs_type x t) then
       Error.typing ~loc:(snd t) 
@@ -63,9 +63,10 @@ let validate_constrs (sigma : Ctx.signature)
 	Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
     (Ctx.add_constr c t n sigma, n+1)
   in
-  fst(List.fold_left elab (sigma, 0) (List.rev cs)) (* TODO use fold_right? *)
+  fst(List.fold_right elab (List.rev cs) (sigma, 0))
 
 let nw = Common.nowhere
+
 (** Computes the induction hypothesis *)
 let motive_ty sigma d t = 
   let ctx = ctx_from sigma in
@@ -73,7 +74,10 @@ let motive_ty sigma d t =
   let params,_ = get_telescope t in
   let d' = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) params) in
 
-  let p = set_telescope ((Common.none_with "D", d')::params) (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
+  let p_tel = params @ [(Common.none_with "D", d')] in
+  Print.debug "Telescope for P : [%t]" (Print.tele ctx p_tel) ;
+
+  let p = set_telescope p_tel (nw (Universe 0)) (fun x t e -> nw(Pi(x, t, e))) in
   Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
   p
 
@@ -90,16 +94,14 @@ let method_ty sigma d t c ct p_nm =
   
   (* All the constructor's parameters *)
   let constr_tel, constr = get_telescope ct in
-  Print.debug "constr_tel length = %d"  (List.length constr_tel) ;
-  Print.debug "constr_tel = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) constr_tel) ;
+  Print.debug "constr_tel = %t" (Print.tele ctx constr_tel) ;
 
   (* The parameters that represent a recursive call *)
   let recs = List.filter (fun (x, t) -> produces_constr ctx d t) constr_tel in
-  (* let recs = List.filter (fun (x, t) -> is_constr ctx d t) constr_tel in *)
 
   Print.debug "t = %t" (Print.expr ctx t) ;
   Print.debug "d = %s" d ;
-  Print.debug "recs = [%t]" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) recs) ;
+  Print.debug "recs = %t" (Print.tele ctx recs) ;
 
   let hyps = List.map 
 	       (fun (x, t) -> 
@@ -114,7 +116,7 @@ let method_ty sigma d t c ct p_nm =
 			      (fun x t e -> nw(Pi(x,t,e))))
 	       recs
   in
-  let final_tel = hyps @ (List.rev constr_tel) in (* I'm confused about this List.rev *)
+  let final_tel = constr_tel @ hyps (* @ constr_tel *) in 
 
   (* p with argments up to D applied *) 
   let p' = constructor_params_for p constr in
@@ -130,6 +132,7 @@ let elim sigma d t cs =
   let ctx = ctx_from sigma in
   Print.debug "Computing eliminator for %s" d ;
   let targets, _ = get_telescope t in
+  Print.debug "targets = %t" (Print.tele ctx targets) ;
   let x = Common.none_with "x" in
 
   let p_nm = Common.none_with "P" in
@@ -137,25 +140,28 @@ let elim sigma d t cs =
 
   let ms = List.map
   	     (fun (c, ct) ->
-  	      Common.none_with "m", method_ty sigma d t c ct p_nm)
-  	     cs
+  	      Common.none_with "m", method_ty sigma d t c ct p_nm) 
+	     cs
+
   in
 
   let x_dest = join_head_spine (nw (Const d)) (List.map (fun (x, _) -> var x) targets) in
 
-  let final_tel = ms @ ((p_nm, p) ::(x, x_dest) :: targets) in
+  let final_tel = targets @ [(x, x_dest) ; (p_nm, p)] @ ms in
 
-  let result = join_head_spine (var p_nm) (List.map (fun (x,_) -> var x) (List.rev ((x, x_dest)::targets))) in
+  let result = join_head_spine (var p_nm) (List.map (fun (x,_) -> var x) (targets @ [(x, x_dest)])) in
 
   Print.debug "Eliminator telescope length: %d" (List.length final_tel) ;
-  Print.debug "Eliminator telescope: %t" (Print.sequence ~sep:" ;" (fun (_,e) -> Print.expr ctx e) final_tel) ;
+  Print.debug "Eliminator telescope: %t" (Print.tele ctx final_tel) ;
   Print.debug "result = %t" (Print.expr ctx result) ;
 
   let elim_ty = set_telescope final_tel result (fun v t e -> nw (Pi (v, t, e))) in
 
+  Print.debug "Final eliminator = %t" (Print.expr ctx elim_ty) ;
+
   let kind = Typing.infer ctx elim_ty in
   if not (is_kind ctx (Norm.whnf ctx kind)) then
-    Error.violation (* ~loc:(snd elim_ty)  *)
+    Error.violation 
       "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
       (Print.expr ctx elim_ty) (Print.expr ctx kind);
   

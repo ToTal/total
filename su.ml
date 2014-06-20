@@ -19,7 +19,7 @@ let get_telescope e =
 
 let set_telescope t e f =
   let rec set_telescope (t : telescope) (e : expr) (f : Common.variable -> expr -> expr -> expr ) : expr =
-    List.fold_left (fun e (x, t) -> f x t (var_to_db x e)) e t
+    List.fold_right (fun (x, t) e -> f x t (var_to_db x e)) t e
   in
   set_telescope t e f
 

@@ -60,7 +60,7 @@ plain_directive:
   | CONTEXT
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
-    { Inductive (x,  e, cs)}
+    { Inductive (x,  e, List.rev cs)} (* We want the constructors in the same order as the file *)
   | opt = OPTION
     { Option opt }
 

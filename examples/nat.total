@@ -15,6 +15,10 @@ Definition add := (plus : (Nat -> Nat -> Nat)).
 
 Context.
 
+Definition cero := plus Z Z.
+Option --debug.
+Eval cero.
+
 
 Definition tres := plus (S (S Z)) (S Z).
 

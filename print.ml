@@ -105,11 +105,11 @@ let expr ctx =
 let tele ctx (tel : Su.telescope) ppf =
   let rec tele (sigma, gamma as ctx) tel ppf =
     match tel with
-    | [] -> ()
-    | (x, t):: rest -> print ppf "%s : %t ; %t" (var x) (expr ctx t) (tele (sigma, Ctx.extend gamma (x, t)) rest)
+    | [] -> print ppf "[]"
+    | (x, t):: rest -> print ppf "%s : %t :: %t" (var x) (expr ctx t) (tele (sigma, Ctx.extend gamma (x, t)) rest)
   in
-  tele ctx (List.rev tel) ppf
-  
+  tele ctx tel ppf
+
 (** Support for printing of errors, warning and debugging information. *)
 
 let verbosity = ref 2
