@@ -5,11 +5,12 @@ open Ctx
 
 (** [equal ctx e1 e2] determines whether [e1] and [e2] are equal expressions. *)
 let rec equal ctx e1' e2' =
-  let (e1, _) = Norm.whnf ctx e1' in
-  let (e2, _) = Norm.whnf ctx e2' in
+  let (e1, l1) = Norm.whnf ctx e1' in
+  let (e2, l2) = Norm.whnf ctx e2' in
+  Print.debug "equal e1=@[%t@]@ e2=@[%t@]" (Print.expr ctx (e1,l1)) (Print.expr ctx (e2,l2)) ;
     match e1, e2 with
-      | Ann(e1, _), _ -> equal ctx e1 e2'
-      | _, Ann(e2, _) -> equal ctx e1' e2
+      | Ann(e1', _), _ -> equal ctx e1' (e2, l2)
+      | _, Ann(e2', _) -> equal ctx (e1,l1) e2'
       | Var k1, Var k2 -> k1 = k2
       | Free v1, Free v2 -> Common.eq v2 v2
       | Const x1, Const x2 -> x1 = x2

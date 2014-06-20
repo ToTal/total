@@ -31,6 +31,7 @@ let norm ?(weak=false) =
        norm ctx (join_head_spine (subst s e') sp_e)
     | Var _, loc
     | Free _, loc ->
+       (* Error.violation "Cannont normalize terms with free variables" *) (* TODO THIS SHOULD BE A VIOLATION *)
        let sp_e = if weak then sp_e else List.map (norm ctx) sp_e in
        join_head_spine h_e sp_e
     | Universe _, loc when empty_sp ->  e
@@ -83,7 +84,9 @@ let norm ?(weak=false) =
     	       let i = Util.this (lookup_constr_number x_name sigma) in
     	       let mi = List.nth mvec i in
     	       Print.debug "mi = %t" (Print.expr ctx mi) ;
-    	       Some (join_head_spine mi (x_sp @ rs))
+    	       let res = norm ctx (join_head_spine mi (x_sp @ rs)) in
+	       Print.debug "ι-red : * ~~> %t" (Print.expr ctx res) ;
+	       Some res
     	    | _ -> Print.debug "ι-red stuck on %t (scrutinee does not reduce)" (Print.expr ctx x) ;
     		   None
       end
