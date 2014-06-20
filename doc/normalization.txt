@@ -1,0 +1,4 @@
+The current implementation of the normalizer is terrible, fortunately Matthias Puech has great pointers to the science.
+First:
+ - His blog post at http://syntaxexclamation.wordpress.com/2012/07/05/strong-reduction-in-big-steps/
+ - Pierre Cregut's "Strongly reducing variants of the Krivine abstract machine" at http://dx.doi.org/10.1007/s10990-007-9015-z
