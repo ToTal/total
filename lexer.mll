@@ -18,14 +18,35 @@
     ("Whnf", WHNF) ;
     ("Help", HELP) ;
     ("Version", VERSION) ;
-    ("Quit",  QUIT) ;
+
     ("Axiom", AXIOM);
     ("Context", CONTEXT) ;
-    ("Inductive", INDUCTIVE)
+    ("Inductive", INDUCTIVE) ;
+    ("Load", LOAD) ;
+    ("Reset", RESET) ;
+    ("Quit",  QUIT)
   ]
 
   let position_of_lex lex =
     Common.Position (Lexing.lexeme_start_p lex, Lexing.lexeme_end_p lex)
+
+(* To buffer string literals *)
+
+let string_buffer = ref ""
+let reset_string_buffer () =
+  string_buffer := ""
+
+let store_string_char c =
+  string_buffer := !string_buffer ^ Char.escaped c
+
+let store_string s =
+  string_buffer := !string_buffer ^ s
+
+let store_lexeme lexbuf =
+  store_string (Lexing.lexeme lexbuf)
+
+let get_stored_string () = !string_buffer
+
 }
 
 let name = ['a'-'z' 'A'-'Z'] ['_' '-' 'a'-'z' 'A'-'Z' '0'-'9' '\'']*
@@ -36,6 +57,11 @@ rule token = parse
   | '\n'                { Lexing.new_line lexbuf; token lexbuf }
   | [' ' '\r' '\t']     { token lexbuf }
   | numeral             { NUMERAL (int_of_string (Lexing.lexeme lexbuf)) }
+  | "\""
+                        { reset_string_buffer();
+			  string lexbuf;
+			  STRING (get_stored_string()) 
+			}
   | "Option"            { option lexbuf}
   | name                { let s = Lexing.lexeme lexbuf in
                             try
@@ -64,6 +90,11 @@ and comments level = parse
   | _                   { comments level lexbuf }
   | eof                 { print_endline "comments are not closed";
 			  raise End_of_file }
+and string = parse
+  |  '"'                { () }
+  | "\\\""              { store_string_char '"' ; string lexbuf }
+  | eof                 { Error.violation "Unterminated String" }
+  | _                   { store_string_char(Lexing.lexeme_char lexbuf 0); string lexbuf }
 
 and option = parse
   | [^'\n''.']*         { OPTION (Lexing.lexeme lexbuf) }

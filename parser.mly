@@ -24,6 +24,8 @@
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
 %token QUIT HELP VERSION AXIOM CHECK EVAL WHNF CONTEXT DEFINITION INDUCTIVE RECURSIVE
+%token LOAD RESET
+%token <string> STRING
 %token <string> OPTION
 %token EOF
 
@@ -65,6 +67,10 @@ plain_directive:
     { Inductive (x,  e, List.rev cs)} (* We want the constructors in the same order as the file *)
   | opt = OPTION
     { Option opt }
+  | RESET
+    { Reset }
+  | LOAD file = STRING
+    { Load file }
 
 constructor :
   | BAR c = NAME COLON e = expr

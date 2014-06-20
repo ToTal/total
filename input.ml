@@ -24,6 +24,8 @@ and directive' =
   | Help
   | Version
   | Context
+  | Reset
+  | Load of string
   | Axiom of Common.name * expr
   | Definition of Common.name * expr option * expr
   | Recursive of Common.name * expr * clause list

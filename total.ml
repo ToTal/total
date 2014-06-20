@@ -22,7 +22,9 @@ Check <expr>                            infer the type of expression <expr>
 Eval <expr>.                            normalize expression <expr>
 Whnf <expr>.                            weak-head normalize expression <expr>
 Context.                                print current contex    
-Option <string>                         set command line options in <string>
+Option <string>.                        set command line options in <string>
+Load \"<file>\".                          loads the file into the current session
+Reset.                                  clears the loaded signature
 Help.                                   print this help
 Version.                                print current logo and version information
 Quit.                                   exit
@@ -215,6 +217,13 @@ let rec exec_cmd interactive sigma (d, loc) =
       print_endline help_text ; sigma
     | Input.Version -> 
        Version.print_version () ; sigma
+    | Input.Load file ->
+       Format.printf "Loading file %s:@." file;
+       use_file sigma (file, interactive)
+    | Input.Reset ->
+       if interactive then
+	 Format.printf "Resetting the signature@." ;
+       empty_signature
     | Input.Quit -> exit 0
 
 (** Load directives from the given file. *)
