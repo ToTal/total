@@ -29,5 +29,6 @@ and directive' =
   | Recursive of Common.name * expr * clause list
   | Check of expr
   | Eval of expr
+  | Whnf of expr
   | Inductive of Common.name * expr * (Common.name * expr) list
   | Option of string

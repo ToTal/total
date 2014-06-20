@@ -23,7 +23,7 @@
 %token LPAREN RPAREN
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP VERSION AXIOM CHECK EVAL CONTEXT DEFINITION INDUCTIVE RECURSIVE
+%token QUIT HELP VERSION AXIOM CHECK EVAL WHNF CONTEXT DEFINITION INDUCTIVE RECURSIVE
 %token <string> OPTION
 %token EOF
 
@@ -53,6 +53,8 @@ plain_directive:
     { Check e }
   | EVAL e = expr
     { Eval e}
+  | WHNF e = expr
+    { Whnf e}
   | DEFINITION x = NAME t = option(preceded(COLON,expr)) COLONEQUAL e = expr
     { Definition (x, t, e) }
   | RECURSIVE f = NAME COLON t = expr COLONEQUAL cs = clause*

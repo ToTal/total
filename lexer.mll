@@ -15,6 +15,7 @@
     ("Definition", DEFINITION) ;
     ("Recursive", RECURSIVE) ;
     ("Eval", EVAL) ;
+    ("Whnf", WHNF) ;
     ("Help", HELP) ;
     ("Version", VERSION) ;
     ("Quit",  QUIT) ;

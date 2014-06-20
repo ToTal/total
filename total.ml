@@ -16,14 +16,18 @@ let help_text = "Toplevel commands:
 Axiom <ident> : <expr>.                 assume variable <ident> has type <expr>
 Definition <indent> := <expr>.          define <ident> to be <expr>
 Definition <indent> : <expr> := <expr>. define <ident> of type <expr> to be <expr>
+Inductive ...                           define an inductive family
+Recursive ...                           define a structurally recursive function
 Check <expr>                            infer the type of expression <expr>
 Eval <expr>.                            normalize expression <expr>
+Whnf <expr>.                            weak-head normalize expression <expr>
 Context.                                print current contex    
 Option <string>                         set command line options in <string>
 Help.                                   print this help
+Version.                                print current logo and version information
 Quit.                                   exit
 
-Syntax:
+<expr> Syntax:
 Type k                                  the k-th universe, e.g. Type 42
 fun x : e1 => e2                        function abstraction
 forall x : e1, e2                       dependent product
@@ -106,11 +110,10 @@ let parse parser lex =
 let rec exec_cmd interactive sigma (d, loc) =
   let ctx_from sigma = (sigma, Ctx.empty_context) in
   let ctx = ctx_from sigma in
-  match d with
-    | Input.Eval e ->
+  let eval_whnf weak e =
       let e = Desugar.desugar sigma e in
-      let t = Norm.nf ctx (Typing.infer ctx e) in
-      let e' = Norm.nf ctx e in
+      let t = Typing.infer ctx e in
+      let e' = (if weak then Norm.whnf else Norm.nf) ctx e in
       begin if !Config.debug then 
 	      let t' = Typing.infer ctx e' in 
 	      if not(Typing.equal ctx t t') then
@@ -122,11 +125,23 @@ let rec exec_cmd interactive sigma (d, loc) =
 	      ()
 
       end; 
-      if interactive then
+      e', t
+  in
+  match d with
+    | Input.Eval e ->
+       let e', t = eval_whnf false e in
+       if interactive then
          Format.printf "    = %t@\n    : %t@."
 		       (Print.expr ctx e')
 		       (Print.expr ctx (Norm.nf ctx t)) ;
-        sigma
+       sigma
+    | Input.Whnf e ->
+       let e', t = eval_whnf true e in
+       if interactive then
+         Format.printf "    ~> %t@\n    : %t@."
+		       (Print.expr ctx e')
+		       (Print.expr ctx (Norm.nf ctx t)) ;
+       sigma
     | Input.Context ->
       List.iter
         (function
