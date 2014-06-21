@@ -18,9 +18,9 @@ Recursive trans : forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq 
 | n i j k (leqs n i' j' p') (leqs n j' k' q') => leqs n i' k' (trans p' q')
 .
 
-(* Proposed syntax for splitting trees
-
-Split trans : forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq i j) (q : leq j k), leq i k :=
+Split trans : 
+      forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq i j) (q : leq j k), 
+      leq i k :=
 on p : leq i j yielding
 | n i j k (leqz n j) q => leqz n j
 | n i j k (leqs n i' j' p') q =>
@@ -28,7 +28,5 @@ on p : leq i j yielding
   | n i j k (leqs n i' j' p') (leq z) impossible q
   | n i j k (leqs n i' j' p') (leqs n j k q') => leqs n j k (trans n j k p' q'))
 .
-
-*) 
 
 Context.

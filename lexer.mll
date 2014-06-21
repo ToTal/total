@@ -8,12 +8,15 @@
     ("fun", FUN);
     ("Type", TYPE);
     ("impossible", IMPOSSIBLE);
+    ("on", ON) ;
+    ("yielding", YIELDING)
   ]
 
   let directives = [
     ("Check", CHECK) ;
     ("Definition", DEFINITION) ;
     ("Recursive", RECURSIVE) ;
+    ("Split", SPLIT) ;
     ("Eval", EVAL) ;
     ("Whnf", WHNF) ;
     ("Help", HELP) ;

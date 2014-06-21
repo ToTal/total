@@ -17,13 +17,15 @@
 
 %}
 
+%token ON YIELDING
 %token FORALL FUN TYPE IMPOSSIBLE
 %token <int> NUMERAL
 %token <string> NAME
 %token LPAREN RPAREN
 %token COLON COMMA PERIOD COLONEQUAL BAR
 %token ARROW DARROW
-%token QUIT HELP VERSION AXIOM CHECK EVAL WHNF CONTEXT DEFINITION INDUCTIVE RECURSIVE
+%token QUIT HELP VERSION AXIOM CHECK EVAL WHNF CONTEXT DEFINITION 
+%token INDUCTIVE RECURSIVE SPLIT
 %token LOAD RESET
 %token <string> STRING
 %token <string> OPTION
@@ -61,6 +63,8 @@ plain_directive:
     { Definition (x, t, e) }
   | RECURSIVE f = NAME COLON t = expr COLONEQUAL cs = clause*
     { Recursive (f, t, cs) }
+  | SPLIT f = NAME COLON t = expr COLONEQUAL nd = node
+    { Split (f, t, nd) }
   | CONTEXT
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
@@ -81,6 +85,22 @@ clause :
     { Clause (ps, e) }
   | BAR ps = simple_expr* IMPOSSIBLE x = NAME
     { Impossible (ps, x) }
+
+node : 
+  | ON x = NAME COLON t = expr YIELDING bs = branch*
+    { NodeSplit (x, t, bs) }
+
+branch :
+  | BAR params = simple_expr*  rhs = st_rhs
+    { Branch (params, rhs) }
+
+st_rhs :
+  | DARROW e = expr
+    { Expr e }
+  | DARROW LPAREN n = node RPAREN
+    { Node n }
+  | IMPOSSIBLE x = NAME
+    { ImpossibleRhs x }
 
 (* Main syntax tree *)
 expr: mark_position(plain_expr) { $1 }

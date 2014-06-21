@@ -205,7 +205,11 @@ let rec exec_cmd interactive sigma (d, loc) =
        	 Format.printf "%s is defined@." x ;
        sigma
     | Input.Recursive (f, _, _) ->
-       Format.printf "%s was seen@." f ; 
+       Format.printf "Recursive %s was seen@." f ; 
+       (* TODO implement this part *)
+       sigma
+    | Input.Split (f, _, _) ->
+       Format.printf "Split-tree %s was seen@." f ; 
        (* TODO implement this part *)
        sigma
     | Input.Option opt -> 
