@@ -9,7 +9,7 @@
     ("Type", TYPE);
     ("impossible", IMPOSSIBLE);
     ("on", ON) ;
-    ("yielding", YIELDING)
+    ("yields", YIELDS)
   ]
 
   let directives = [

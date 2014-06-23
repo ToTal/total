@@ -17,7 +17,7 @@
 
 %}
 
-%token ON YIELDING
+%token ON YIELDS
 %token FORALL FUN TYPE IMPOSSIBLE
 %token <int> NUMERAL
 %token <string> NAME
@@ -87,7 +87,7 @@ clause :
     { Impossible (ps, x) }
 
 node : 
-  | ON x = NAME COLON t = expr YIELDING bs = branch*
+  | ON x = NAME COLON t = expr YIELDS bs = branch*
     { NodeSplit (x, t, bs) }
 
 branch :
