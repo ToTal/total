@@ -20,7 +20,12 @@ type clause =
 type node = 
   | NodeSplit of Common.name * expr * branch list
 and branch = 
-  | Branch of expr list * rhs
+  | Branch of pattern list * rhs
+and pattern = 
+  | PVar of Common.name
+  | Dot of expr
+  | PApp of pattern * pattern
+
 and rhs =
   | Expr of expr
   | ImpossibleRhs of Common.name

@@ -91,8 +91,24 @@ node :
     { NodeSplit (x, t, bs) }
 
 branch :
-  | BAR params = simple_expr*  rhs = st_rhs
+  | BAR params = simple_pattern*  rhs = st_rhs
     { Branch (params, rhs) }
+
+pattern :
+  | PERIOD e = simple_expr
+    { Dot e }
+  | p1 = pattern p2 = simple_pattern
+    { PApp (p1, p2) }
+  | n = NAME
+    { PVar n }
+
+simple_pattern :
+  | PERIOD e = simple_expr
+    { Dot e }
+  | n = NAME
+    { PVar n }
+  | LPAREN p =  pattern RPAREN
+    { p }
 
 st_rhs :
   | DARROW e = expr

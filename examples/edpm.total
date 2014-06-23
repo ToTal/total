@@ -19,14 +19,15 @@ Recursive trans : forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq 
 .
 
 Split trans : 
-      forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq i j) (q : leq j k), 
-      leq i k :=
+      forall (n : nat) (i : Fin n) (j : Fin n) (k : Fin n) (p : leq n i j) (q : leq n j k), 
+      leq n i k :=
 on p : leq i j yielding
-| n i j k (leqz n j) q => leqz n j
-| n i j k (leqs n i' j' p') q =>
+| .(S n) .(F_z n) .j k (leqz n j) q => leqz n k
+| .(S n) .(fs n i) .(fs n j) k (leqs n i j p) q =>
   (on q : (leq (F_s n j) k) yielding
-  | n i j k (leqs n i' j' p') (leq z) impossible q
-  | n i j k (leqs n i' j' p') (leqs n j k q') => leqs n j k (trans n j k p' q'))
+  | .(S n) .(fs n i) .j .(fz n) (leqs n i j p) (leqz .n .j) impossible q (* double check this *)
+  | .(S n) .(fs n i) .(fs n j) .(fs n j') (leqs n i j p) (leqs .n .j j' q) => leqs n i j' (trans n i j j' p q)) 
 .
 
 Context.
+
