@@ -1,0 +1,3 @@
+Inductive eq : forall ( T : Type 0),  T -> T -> Type 0 :=
+| refl : forall (T : Type 0) (n : T), eq T n n
+. 
