@@ -1,3 +1,15 @@
 Inductive eq : forall ( T : Type 0),  T -> T -> Type 0 :=
 | refl : forall (T : Type 0) (n : T), eq T n n
 . 
+
+Inductive jmeq : forall (T : Type 0) (S : Type 0), T -> S -> Type 0 :=
+| jm_refl : forall (T: Type 0) (n : T), jmeq T T n n
+.
+
+(* This does NOT need to be an axiom, it should be a Definition, it remains to be implemented though *)
+Axiom uip_refl : forall (T : Type 0) (n : T) (pf : eq T n n), jmeq (eq T n n) (eq T n n) pf (refl T n).
+
+(* On the other hand, this HAS to be an axiom, and it makes K admissible? *)
+Axiom jmeq_eq : forall (T : Type 0) (n m : T), jmeq T T n m -> eq T n m.
+
+Context.
