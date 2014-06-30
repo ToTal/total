@@ -28,7 +28,7 @@
 %token INDUCTIVE RECURSIVE SPLIT
 %token LOAD RESET
 %token <string> STRING
-%token <string> OPTION
+%token SET OPT_ON OPT_OFF
 %token EOF
 
 %start <Input.directive list> directives
@@ -69,8 +69,10 @@ plain_directive:
     { Context }
   | INDUCTIVE x = NAME COLON e = expr COLONEQUAL cs = constructor*
     { Inductive (x,  e, List.rev cs)} (* We want the constructors in the same order as the file *)
-  | opt = OPTION
-    { Option opt }
+  | SET property = NAME COLONEQUAL v = option_value
+    { Option (property, v) }
+  | SET
+    { assert false }
   | RESET
     { Reset }
   | LOAD file = STRING
@@ -117,6 +119,14 @@ st_rhs :
     { Node n }
   | IMPOSSIBLE x = NAME
     { ImpossibleRhs x }
+
+option_value :
+  | s = STRING
+    { StringOpt s }
+  | OPT_ON
+    { BoolOpt true }
+  | OPT_OFF
+    { BoolOpt false }
 
 (* Main syntax tree *)
 expr: mark_position(plain_expr) { $1 }

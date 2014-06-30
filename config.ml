@@ -14,3 +14,19 @@ let check_positivity = ref true
 (* Are programs total? *)
 
 let totality_is_tainted = ref false
+
+
+(* Option handling *)
+
+(* type cmd_line_option =  *)
+(*     { key : Arg.key  *)
+(*     ; spec : Arg. spec *)
+(*     ; doc : Arg.doc  *)
+(*     } *)
+
+
+type opt_tp =
+  | Opt_float of float
+  | Opt_int of int
+  | Opt_string of string
+  | Opt_bool of bool

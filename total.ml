@@ -212,10 +212,10 @@ let rec exec_cmd interactive sigma (d, loc) =
        Format.printf "Split-tree %s was seen@." f ; 
        (* TODO implement this part *)
        sigma
-    | Input.Option opt -> 
-       let curr = ref 0 in
-       let argv = Array.of_list ("foo"::Str.split (Str.regexp " ") (String.trim opt)) in
-       Arg.parse_argv ~current:curr argv options anonymous usage ;
+    | Input.Option (name, value) -> 
+       (* let curr = ref 0 in *)
+       (* let argv = Array.of_list ("foo"::Str.split (Str.regexp " ") (String.trim opt)) in *)
+       (* Arg.parse_argv ~current:curr argv options anonymous usage ; *)
        sigma
     | Input.Help ->
       print_endline help_text ; sigma

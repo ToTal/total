@@ -31,6 +31,10 @@ and rhs =
   | ImpossibleRhs of Common.name
   | Node of node
 
+type option_value =
+  | StringOpt of string
+  | BoolOpt of bool
+
 (** Toplevel directives. *)
 type directive = directive' * Common.position
 and directive' =
@@ -48,4 +52,4 @@ and directive' =
   | Eval of expr
   | Whnf of expr
   | Inductive of Common.name * expr * (Common.name * expr) list
-  | Option of string
+  | Option of string * option_value
