@@ -1,12 +1,12 @@
 Inductive empty : Type 0 := .
 
-Option --nopos.
+Set Positivity := Off.
 
 Inductive bad : Type 0 :=
 | Con : (bad -> empty) -> bad
 .
 
-Option --pos.
+Set Positivity := On.
 
 Definition t1 : bad -> empty := fun x : bad =>
  bad-elim x (fun x : bad => empty) (fun x0 : bad -> empty => x0 x)
@@ -17,7 +17,6 @@ Definition t2 : empty := t1 (Con t1).
 Inductive realbad : Type 1 :=
 | RealBadCon : (Type 1 -> empty) -> realbad
 .
-
 
 Context.
 

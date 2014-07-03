@@ -9,7 +9,9 @@
     ("Type", TYPE);
     ("impossible", IMPOSSIBLE);
     ("on", ON) ;
-    ("yields", YIELDS)
+    ("yields", YIELDS) ;
+    ("On", SET_ON) ;
+    ("Off", SET_OFF)
   ]
 
   let directives = [
@@ -27,6 +29,8 @@
     ("Inductive", INDUCTIVE) ;
     ("Load", LOAD) ;
     ("Reset", RESET) ;
+    ("Set", SET) ;
+    ("Get", GET) ;
     ("Quit",  QUIT)
   ]
 
@@ -65,9 +69,7 @@ rule token = parse
 			  string lexbuf;
 			  STRING (get_stored_string()) 
 			}
-  | "Set"               { SET }
-  | "On"                { OPT_ON }
-  | "Off"               { OPT_OFF }
+  | "InternalOption"    { option lexbuf}
   | name                { let s = Lexing.lexeme lexbuf in
                             try
                               List.assoc s reserved
@@ -100,7 +102,10 @@ and string = parse
   | "\\\""              { store_string_char '"' ; string lexbuf }
   | eof                 { Error.violation "Unterminated String" }
   | _                   { store_string_char(Lexing.lexeme_char lexbuf 0); string lexbuf }
-
+and option = parse
+  | [^'\n''.']* { OPTION (Lexing.lexeme lexbuf) }
+  | '.' { PERIOD }
+  | '\n' { Lexing.new_line lexbuf; token lexbuf }
 {
   let read_file parser fn =
   try

@@ -52,4 +52,7 @@ and directive' =
   | Eval of expr
   | Whnf of expr
   | Inductive of Common.name * expr * (Common.name * expr) list
-  | Option of string * option_value
+  | Set of Common.name * Config.setting_value
+  | Get of Common.name
+  | PrintSettings
+  | Option of string
