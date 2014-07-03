@@ -1,5 +1,9 @@
 (** Signature management *)
 
+type origin =
+  | User
+  | Synth
+
 (** The signature is represented as an associative list which maps a variable [x] to a pair
    [(t,e)] where [t] is its type and [e] is its value (optional).
 *)
@@ -18,65 +22,69 @@ type declaration =
   | Elim of eliminator
   | Definition of Syntax.expr * Syntax.expr
 
-(** A signature consists of a list of names, used for pretty-printing and
-    desugaring of variable names to de Bruijn indices, and a list of
-    declarations. *)
-type signature = (Common.name * declaration) list
+(** A signature consists of a list of names, declarations and an origin.
+    The origin says whether the entry was synthesized or not.*)
+
+type signature = (Common.name * (declaration * origin)) list
 
 (** On the zeroth day there was the empty signature. *)
 let empty_signature = []
     
 (** [lookup_ty k ctx] returns the type of [Var k] in signature [ctx]. *)
 let lookup_ty x sigma =
-  match List.assoc x sigma with
-    | Axiom t | Constr (t,_) | Definition (t, _) -> t
+  match fst(List.assoc x sigma) with
+    | Axiom t| Constr (t,_) | Definition (t, _) -> t
     | Elim el -> el.t
 
 (** [lookup_definition k ctx] returns the definition of [Var k] in signature [ctx]. *)
 let lookup_definition x sigma = 
-  match List.assoc x sigma with
+  match fst(List.assoc x sigma) with
     | Definition (_, e) -> Some e
     | Axiom _ | Constr _  | Elim _-> None
 
 let lookup_constr_number x sigma = 
-  match List.assoc x sigma with
+  match fst(List.assoc x sigma) with
   | Constr (_, n) -> Some n
   | _ -> None
 
 let lookup_elim x sigma = 
-  match List.assoc x sigma with
+  match fst(List.assoc x sigma) with
     | Elim el -> Some el
     | Axiom _ | Constr _  | Definition _ -> None
 
 (** Looks up the name of the eliminator for a given type *)
 let rec lookup_elim_for_ty d = function
   | [] -> None
-  | (x, Elim el)::_ when d = el.t_name -> Some x
+  | (x, (Elim el, _))::_ when d = el.t_name -> Some x
   | _::rest -> lookup_elim_for_ty d rest
 
 
 (** [add_parameter x t ctx] returns [ctx] with the parameter [x] of type [t]. *)
-let add_axiom x t ctx = (x, Axiom t) :: ctx
-let add_constr x t n ctx = (x, Constr (t, n)) :: ctx
-let add_elim x t d ctx = 
+let add_axiom x t origin ctx = (x, (Axiom t, origin)) :: ctx
+let add_constr x t n origin ctx = (x, (Constr (t, n), origin)) :: ctx
+let add_elim x t d origin ctx = 
   let rec tp_arity n = function 
     | Syntax.Pi (_,_, e), l -> tp_arity (n+1) e
     | _ -> n
   in
   let n = tp_arity 0 t in
-  (x, Elim {t = t ; arity = n ; t_name = d}) :: ctx
+  (x, (Elim {t = t ; arity = n ; t_name = d}, origin)) :: ctx
 
 (** [add_definition x t e ctx] returns [ctx] with [x] of type [t] defined as [e]. *)
-let add_definition x t e ctx = (x, Definition (t, e)) :: ctx
+let add_definition x t e origin ctx = (x, (Definition (t, e), origin)) :: ctx
 
-let combine sigma = sigma 
+let combine sigma = 
+  List.map (fun (n, (d, _)) -> (n, d)) sigma
+
+let combine_user sigma = 
+  combine (List.filter (fun (_, (_, origin)) -> origin = User) sigma)
 
 let mem = List.mem_assoc
 
 let sig_fold = List.fold_left
 
 let is_elim sigma x =
-  match List.assoc x sigma with
+  match fst(List.assoc x sigma) with
   | Elim _ -> true
   | _ -> false
 

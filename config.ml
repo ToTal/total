@@ -11,6 +11,10 @@ let debug = ref false
 
 let check_positivity = ref true
 
+(* Do we need to print synthesized signature components *)
+
+let show_synthesized = ref false
+
 (* Are programs total? *)
 
 let totality_is_tainted = ref false
@@ -52,8 +56,12 @@ let settings =
   ; ("Debug", { set = (fun v -> debug := (to_boolean v))
 	      ; get = (fun () -> BoolSetting !debug)
 	      ; help = "Boolean setting to enable/disable debug mode"})
+
+  ; ("Synthesized", { set = (fun v -> show_synthesized := (to_boolean v))
+		    ; get = (fun () -> BoolSetting !show_synthesized)
+		    ; help = "Boolean setting to enable/disable printed sinthesized declarations"})
   ]
-  
+
 let set_option n v =
   try 
     let entry = List.assoc n settings in

@@ -1,3 +1,8 @@
+
+type origin =
+  | User
+  | Synth
+
 (* Eliminators *)
 
 type eliminator = 
@@ -31,18 +36,20 @@ val lookup_elim :
 val lookup_elim_for_ty :
   Common.name -> signature -> Common.name option
 
-val add_axiom : Common.name -> Syntax.expr -> signature -> signature
-val add_constr : Common.name -> Syntax.expr -> int -> signature -> signature
-val add_elim : Common.name -> Syntax.expr -> Common.name -> signature -> signature
+val add_axiom : Common.name -> Syntax.expr -> origin -> signature -> signature
+val add_constr : Common.name -> Syntax.expr -> int -> origin -> signature -> signature
+val add_elim : Common.name -> Syntax.expr -> Common.name -> origin -> signature -> signature
 
 val add_definition :
-  Common.name -> Syntax.expr -> Syntax.expr -> signature -> signature
+  Common.name -> Syntax.expr -> Syntax.expr -> origin -> signature -> signature
 
 val mem : string -> signature -> bool
 
 val combine : signature -> (string * declaration) list
 
-val sig_fold : ('a -> Common.name * declaration -> 'a) -> 'a -> signature -> 'a
+val combine_user : signature -> (string * declaration) list
+
+val sig_fold : ('a -> Common.name * (declaration * origin) -> 'a) -> 'a -> signature -> 'a
 
 val is_elim : signature -> Common.name -> bool
 

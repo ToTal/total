@@ -14,7 +14,7 @@ let elab_type_constr sigma x t =
   let _ = Typing.infer ctx t in
   if not (is_kind ctx (Norm.whnf ctx t)) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
-  Ctx.add_constr x t 0 sigma 	(* type constructor is number 0 *)
+  Ctx.add_constr x t 0 Ctx.User sigma 	(* type constructor is number 0 *)
 
 let constructs_type x t = 
   let _tel, body = get_telescope t in
@@ -61,7 +61,7 @@ let validate_constrs (sigma : Ctx.signature)
     if !Config.check_positivity then
       if not (positive ctx t x) then
 	Error.typing ~loc:(snd t) "constructor %s is not strictly positive." c;
-    (Ctx.add_constr c t n sigma, n+1)
+    (Ctx.add_constr c t n Ctx.User sigma, n+1)
   in
   fst(List.fold_right elab (List.rev cs) (sigma, 0))
 
@@ -163,6 +163,6 @@ let elim sigma d t cs =
       "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
       (Print.expr ctx elim_ty) (Print.expr ctx kind);
   
-  Ctx.add_elim (d^"-elim") elim_ty d sigma
+  Ctx.add_elim (d^"-elim") elim_ty d Ctx.Synth sigma
 
 

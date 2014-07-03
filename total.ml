@@ -147,30 +147,35 @@ let rec exec_cmd interactive sigma (d, loc) =
 		       (Print.expr ctx (Norm.nf ctx t)) ;
        sigma
     | Input.Context ->
-      List.iter
-        (function
-          | (x, Axiom t) ->
-            Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
-          | (x, Constr (t, n)) ->
-	     if !Config.debug then 
-               Format.printf "@[(%d)%s : %t@]@." n x (Print.expr (ctx_from sigma) t)
-	     else
-	       Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
-          | (x, Elim el) ->
-            Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) el.t)
-          | (x, Definition (t, e)) ->
-            Format.printf "@[%s = %t@]@\n    : %t@." 
-			  x 
-			  (Print.expr (ctx_from sigma) e) 
-			  (Print.expr (ctx_from sigma) t))
-	(combine sigma);
-      sigma
+       let 
+	 signatures = if !Config.show_synthesized 
+		      then combine sigma 
+		      else combine_user sigma 
+       in
+       List.iter
+         (function
+           | (x, Axiom t) ->
+              Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
+           | (x, Constr (t, n)) ->
+	      if !Config.debug then (* Print the constructor number in debug mode *)
+		Format.printf "@[(%d)%s : %t@]@." n x (Print.expr (ctx_from sigma) t)
+	      else
+		Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) t)
+           | (x, Elim el) ->
+              Format.printf "@[%s : %t@]@." x (Print.expr (ctx_from sigma) el.t)
+           | (x, Definition (t, e)) ->
+              Format.printf "@[%s = %t@]@\n    : %t@." 
+			    x 
+			    (Print.expr (ctx_from sigma) e) 
+			    (Print.expr (ctx_from sigma) t))
+	 signatures ;
+       sigma
     | Input.Axiom (x, t) ->
       let t = Desugar.desugar sigma t in
       let _ =  Typing.infer_universe (ctx_from sigma) t in
         if interactive then
           Format.printf "%s is assumed.@." x ;
-        add_axiom x t sigma
+        add_axiom x t Ctx.User sigma
     | Input.Definition (x, ann,  e) ->
        let ctx = ctx_from sigma in
        if Ctx.mem x sigma then Error.typing ~loc "%s already exists" x ;
@@ -183,7 +188,7 @@ let rec exec_cmd interactive sigma (d, loc) =
 				 x (Print.expr ctx t) (Print.expr ctx (Desugar.desugar sigma t'))) ;
        if interactive then
          Format.printf "%s is defined.@." x ;
-       add_definition x (Norm.nf ctx t) e sigma
+       add_definition x (Norm.nf ctx t) e User sigma
     | Input.Check e ->
       let e = Desugar.desugar sigma e in
       let t = Typing.infer (ctx_from sigma) e in
