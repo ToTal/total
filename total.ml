@@ -22,7 +22,9 @@ Check <expr>                            infer the type of expression <expr>
 Eval <expr>.                            normalize expression <expr>
 Whnf <expr>.                            weak-head normalize expression <expr>
 Context.                                print current contex    
-Option <string>.                        set command line options in <string>
+Set.                                    print current settings
+Set <name> := <value>.                  set a particular setting
+Get <name>.                             get the value of a setting
 Load \"<file>\".                          loads the file into the current session
 Reset.                                  clears the loaded signature
 Help.                                   print this help
@@ -216,6 +218,18 @@ let rec exec_cmd interactive sigma (d, loc) =
        let curr = ref 0 in
        let argv = Array.of_list ("foo"::Str.split (Str.regexp " ") (String.trim opt)) in
        Arg.parse_argv ~current:curr argv options anonymous usage ;
+       sigma
+    | Input.Set (n, v) ->
+       (try Config.set_option n v
+	with Config.SettingExc s -> Format.printf "Unable to set %s (%s)@." n s) ;
+       sigma
+    | Input.Get n ->
+       (try let setting = Config.get_option n in
+	    Format.printf "%s := %s@." n (Config.str_of_setting setting)
+	with Config.SettingExc s -> Format.printf "Unable to get %s (%s)@." n s) ;
+       sigma
+    | Input.PrintSettings ->
+       Format.printf "Settings:\n%s@." (Config.get_settings_doc()) ;
        sigma
     | Input.Help ->
       print_endline help_text ; sigma

@@ -9,7 +9,9 @@
     ("Type", TYPE);
     ("impossible", IMPOSSIBLE);
     ("on", ON) ;
-    ("yields", YIELDS)
+    ("yields", YIELDS) ;
+    ("On", SET_ON) ;
+    ("Off", SET_OFF)
   ]
 
   let directives = [
@@ -27,6 +29,8 @@
     ("Inductive", INDUCTIVE) ;
     ("Load", LOAD) ;
     ("Reset", RESET) ;
+    ("Set", SET) ;
+    ("Get", GET) ;
     ("Quit",  QUIT)
   ]
 
@@ -65,7 +69,7 @@ rule token = parse
 			  string lexbuf;
 			  STRING (get_stored_string()) 
 			}
-  | "Option"            { option lexbuf}
+  | "InternalOption"    { option lexbuf}
   | name                { let s = Lexing.lexeme lexbuf in
                             try
                               List.assoc s reserved

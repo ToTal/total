@@ -29,6 +29,7 @@
 %token LOAD RESET
 %token <string> STRING
 %token <string> OPTION
+%token SET GET SET_ON SET_OFF
 %token EOF
 
 %start <Input.directive list> directives
@@ -73,6 +74,12 @@ plain_directive:
     { Option opt }
   | RESET
     { Reset }
+  | SET n = NAME COLONEQUAL o = set_value
+    { Set (n, o) }
+  | SET
+    { PrintSettings }
+  | GET n = NAME
+    { Get n }
   | LOAD file = STRING
     { Load file }
 
@@ -117,6 +124,14 @@ st_rhs :
     { Node n }
   | IMPOSSIBLE x = NAME
     { ImpossibleRhs x }
+
+set_value :
+  | SET_ON
+    { Config.BoolSetting true }
+  | SET_OFF
+    { Config.BoolSetting false }
+  | s = STRING
+    { Config.StringSetting s }
 
 (* Main syntax tree *)
 expr: mark_position(plain_expr) { $1 }

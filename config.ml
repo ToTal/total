@@ -14,3 +14,67 @@ let check_positivity = ref true
 (* Are programs total? *)
 
 let totality_is_tainted = ref false
+
+let check_tainted_totality () = 
+  if not !check_positivity then
+    totality_is_tainted := true
+
+(* Setting handling *)
+
+exception SettingExc of string
+
+type setting_value = 
+    | BoolSetting of bool 
+    | StringSetting of string
+
+type setting =
+    { set : (setting_value -> unit)
+    ; get : (unit -> setting_value)
+    ; help : string
+    }
+
+(* convert a  setting_value to boolean if possible *)
+let to_boolean = function
+  | BoolSetting b -> b
+  | _ -> raise (SettingExc "Expected a setting of type boolean (On|Off)")
+
+(* convert a  setting_value to string if possible *)
+let to_string = function
+  | StringSetting s -> s
+  | _ -> raise (SettingExc "Expected a setting of type string")
+
+
+let settings = 
+  [ ("Positivity", { set = (fun v -> check_positivity := (to_boolean v))
+		   ; get = (fun () -> BoolSetting !check_positivity)
+		   ; help = "Boolean setting to enable/disable the positivity checker"})
+
+  ; ("Debug", { set = (fun v -> debug := (to_boolean v))
+	      ; get = (fun () -> BoolSetting !debug)
+	      ; help = "Boolean setting to enable/disable debug mode"})
+  ]
+  
+
+let set_option n v =
+  try 
+    let entry = List.assoc n settings in
+    entry.set v ;
+    check_tainted_totality()
+  with Not_found -> raise (SettingExc "Setting not found")
+			  
+let get_option n = 
+  try 
+    let entry = List.assoc n settings in
+    entry.get ()
+  with Not_found -> raise (SettingExc "Setting not found")
+
+let str_of_setting = function
+  | BoolSetting true -> "On"
+  | BoolSetting false -> "Off"
+  | StringSetting s -> "\"" ^ s ^ "\""
+
+let get_settings_doc () = 
+  List.fold_left (fun r (s, e) -> 
+		  s ^ " := " ^ (str_of_setting (e.get ())) ^ "\t(" ^ e.help ^ ")\n" ^ r)
+		 (if !totality_is_tainted then "Totality may be tainted." else "")
+		 settings
