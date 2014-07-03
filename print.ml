@@ -130,4 +130,6 @@ let message ?(loc=Common.Nowhere) msg_type v =
 
 let error (loc, err_type, msg) = message ~loc (err_type) 1 "%s" msg
 let warning msg = message "** Warning" warning_verbosity msg
-let debug msg = message "DBG" debug_verbosity msg
+(* HACK ALERT : debug only prints when debug is on, the verbosity system needs to be 
+   replaced *)
+let debug msg = message "DBG" (if !Config.debug then !verbosity else debug_verbosity + 1) msg

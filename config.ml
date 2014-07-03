@@ -54,7 +54,6 @@ let settings =
 	      ; help = "Boolean setting to enable/disable debug mode"})
   ]
   
-
 let set_option n v =
   try 
     let entry = List.assoc n settings in
