@@ -69,7 +69,7 @@ rule token = parse
 			  string lexbuf;
 			  STRING (get_stored_string()) 
 			}
-  | "InternalOption"    { option lexbuf}
+  | "CommandLine"       { option lexbuf}
   | name                { let s = Lexing.lexeme lexbuf in
                             try
                               List.assoc s reserved

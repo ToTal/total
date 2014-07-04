@@ -72,6 +72,8 @@ plain_directive:
     { Inductive (x,  e, List.rev cs)} (* We want the constructors in the same order as the file *)
   | RESET
     { Reset }
+  | o = OPTION
+    { Option o }
   | SET n = NAME COLONEQUAL o = set_value
     { Set (n, o) }
   | SET
