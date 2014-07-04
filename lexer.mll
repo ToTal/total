@@ -11,7 +11,9 @@
     ("on", ON) ;
     ("yields", YIELDS) ;
     ("On", SET_ON) ;
-    ("Off", SET_OFF)
+    ("Off", SET_OFF) ;
+    ("hrefl", REFL) ;
+    ("hsubst", SUBST)
   ]
 
   let directives = [
@@ -80,12 +82,16 @@ rule token = parse
                         }
   | '('                 { LPAREN }
   | ')'                 { RPAREN }
+  | '['                 { LSQ }
+  | ']'                 { RSQ }
   | "."                 { PERIOD }
   | ':'                 { COLON }
   | ','                 { COMMA }
+  | ';'                 { SEMICOLON }
   | "->"                { ARROW }
   | "=>"                { DARROW }
   | ":="                { COLONEQUAL }
+  | '='                 { EQUAL }
   | "|"                 { BAR }
   | "(*"                { comments 0 lexbuf }
   | eof                 { EOF }

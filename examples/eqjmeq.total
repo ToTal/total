@@ -1,0 +1,29 @@
+Inductive id : forall ( T : Type 0),  T -> T -> Type 0 :=
+| refl : forall (T : Type 0) (n : T), id T n n
+. 
+
+Definition jmeq_to_eq : forall (A: Type 0) (a b : A), a =[A] b -> id A a b :=
+fun A : Type 0 => fun a : A => fun b : A => fun q : a =[A] b =>
+  hsubst A a b q (fun x : A => id A a x) (refl A a)
+.
+
+(* Using it *)
+
+Inductive nat : Type 0 := 
+| Z : nat 
+| S : nat -> nat
+.
+
+Definition plus : nat -> nat -> nat :=
+fun m : nat =>  fun n : nat => 
+  nat-elim m 
+    (fun x : nat => nat)
+    n 
+    (fun nn : nat => fun prec : nat => S prec)
+.
+
+
+Definition  zero := Z.
+Definition   one := S Z.
+
+Definition t0 : id nat zero (plus Z Z) := jmeq_to_eq nat zero (plus Z Z) (hrefl nat zero).		

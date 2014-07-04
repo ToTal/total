@@ -9,6 +9,9 @@ and expr' =
   | Lambda of abstraction
   | App of expr * expr
   | Ann of expr * expr
+  | HEq of expr * expr * expr * expr
+  | HRefl
+  | HSubst
  
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. *)
 and abstraction = Common.variable * expr * expr

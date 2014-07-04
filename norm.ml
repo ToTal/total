@@ -41,11 +41,25 @@ let norm ?(weak=false) =
     | App _, _ -> Error.violation "Unexpected, head cannot be an application."
     | Ann (e, t), loc when empty_sp -> Ann(norm ctx e, norm ctx t), loc
     | Ann (e, t), loc -> norm ctx (join_head_spine e sp_e) (* removes annotation *)
+    | HEq (t1, t2, e1, e2), loc -> 
+      HEq (norm ctx t1, norm ctx t2, norm ctx e1, norm ctx e2), loc
+    | HRefl, loc -> HRefl, loc
+    | HSubst, loc -> Util.maybe (hsubst ctx sp_e) (fun _ -> e)
+  
 			      
   and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak then a
     else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)
 
+  and hsubst (sigma, gamma as ctx) sp =
+    let hsubst_arity = 6 in
+    let sp_len = List.length sp in
+    if sp_len = hsubst_arity then
+      let q = norm ctx (List.nth sp 3) in 		(* get the proof of equality *)
+      match split_head_spine q with
+	| (HRefl, _), _ -> Some(List.nth sp 5)          (* perform the reduction *)
+	| _, _ -> None
+    else None
   and iota (sigma, gamma as ctx) const sp el =
     Print.debug "ι-red on constructor %s and spine [%t]" const (Print.sequence ~sep:" ;" (fun e -> Print.expr ctx e) sp);
     let elim = Util.this (lookup_elim_for_ty el.t_name sigma) in (* TODO MOVE TO THE THE ELIM RECORD *)

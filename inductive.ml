@@ -26,10 +26,13 @@ let constructs_type x t =
 let positive ctx t x = 
   let rec appears = function
     | Const x', _ -> x = x'
-    | Var _, _ | Free _, _ | Universe _, _ -> false
+    |HRefl, _ | HSubst, _ | Var _, _ | Free _, _ | Universe _, _ -> false
     | Subst (s, e), _ -> appears e || sapp s
     | Pi (_, t, e), _ | Lambda (_, t, e), _ -> appears t || appears e
     | App (e1, e2),_ | Ann (e1,e2),_ -> appears e1 || appears e2
+    | HEq (t1, t2, e1, e2),_ ->
+      appears t1 || appears t2 ||
+	appears e1 || appears e2
   and sapp = function
     | Shift _ -> false
     | Dot (e, s) -> appears e || sapp s

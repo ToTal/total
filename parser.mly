@@ -21,8 +21,9 @@
 %token FORALL FUN TYPE IMPOSSIBLE
 %token <int> NUMERAL
 %token <string> NAME
-%token LPAREN RPAREN
-%token COLON COMMA PERIOD COLONEQUAL BAR
+%token LPAREN RPAREN LSQ RSQ
+%token COLON COMMA PERIOD SEMICOLON COLONEQUAL EQUAL BAR
+%token REFL SUBST
 %token ARROW DARROW
 %token QUIT HELP VERSION AXIOM CHECK EVAL WHNF CONTEXT DEFINITION 
 %token INDUCTIVE RECURSIVE SPLIT
@@ -145,6 +146,7 @@ plain_expr:
   | t1 = app_expr ARROW t2 = expr
     { Pi (Common.none (), t1, t2) }
 
+
 app_expr: mark_position(plain_app_expr) { $1 }
 plain_app_expr:
   | e = plain_simple_expr
@@ -155,11 +157,19 @@ plain_app_expr:
     { Ann (e1, e2) }
   | e1 = app_expr e2 = simple_expr
     { App (e1, e2) }
+  | e1 = app_expr EQUAL LSQ t1 = simple_expr SEMICOLON t2 = app_expr RSQ e2 = simple_expr
+    { HEq(t1, t2, e1, e2) }
+  | e1 = app_expr EQUAL LSQ t = simple_expr RSQ e2 = simple_expr
+    { HEq(t, t, e1, e2) }
 
 simple_expr: mark_position(plain_simple_expr) { $1 }
 plain_simple_expr:
   | n = NAME
     { Var n }
+  | REFL
+    { HRefl }
+  | SUBST
+    { HSubst }
   | LPAREN e = plain_expr RPAREN
     { e }
 

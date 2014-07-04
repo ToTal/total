@@ -16,6 +16,11 @@ and expr' =
   | Lambda of abstraction
   | App of expr * expr
   | Ann of expr * expr
+  (* Internalized support for heterogeneous equality *)
+  | HEq of expr * expr * expr * expr
+  | HRefl
+  | HSubst
+
 
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. We also keep around
     the original name [x] of the bound variable for pretty-printing purposes. *)
@@ -35,6 +40,9 @@ let mk_arrow s t = mk_pi (Common.none (), s, t)
 let mk_lambda a = Common.nowhere (Lambda a)
 let mk_app e1 e2 = Common.nowhere (App (e1, e2))
 let mk_const c = Common.nowhere (Const c)
+let mk_heq t1 t2 e1 e2 = Common.nowhere(HEq (t1, t2, e1, e2))
+let mk_hrefl () = Common.nowhere(HRefl)
+let mk_hsubst () = Common.nowhere(HSubst)
 
 (** The identity substiution. *)
 let idsubst = Shift 0
@@ -55,6 +63,7 @@ let rec compose s t =
     lazily, i.e., it does just enough to expose the outermost constructor of [e]. *)
 let subst =
   let rec subst s ((e', loc) as e) =
+    let ms = mk_subst s in
     match s, e' with
       | Shift m, Var k -> Var (k + m), loc
       | Dot (a, s), Var 0 -> subst idsubst a
@@ -64,8 +73,11 @@ let subst =
       | _, Universe _ -> e
       | s, Pi a -> Pi (subst_abstraction s a), loc
       | s, Lambda a -> Lambda (subst_abstraction s a), loc
-      | s, App (e1, e2) -> App (mk_subst s e1, mk_subst s e2), loc
-      | s, Ann (e1, e2) -> Ann (mk_subst s e1, mk_subst s e2), loc
+      | s, App (e1, e2) -> App (ms e1, ms e2), loc
+      | s, Ann (e1, e2) -> Ann (ms e1, ms e2), loc
+      | s, HEq (t1, t2, e1, e2) -> HEq (ms t1, ms t2, ms e1, ms e2), loc
+      | s, HRefl -> HRefl, loc
+      | s, HSubst -> HSubst, loc
       | s, Free n -> e		(* is this correct? *)
   and subst_abstraction s (x, e1, e2) =
     let e1 = mk_subst s e1 in
@@ -86,6 +98,11 @@ let rec occurs k (e, _) =
     | Lambda a -> occurs_abstraction k a
     | App (e1, e2) -> occurs k e1 || occurs k e2
     | Ann (e1, e2) -> occurs k e1 || occurs k e2
+    | HEq (t1, t2, e1, e2) -> 
+      occurs k t1 || occurs k t2 ||
+	occurs k e1 || occurs k e2
+    | HRefl -> false
+    | HSubst -> false
 
 and occurs_abstraction k (_, e1, e2) =
   occurs k e1 || occurs (k + 1) e2
@@ -109,6 +126,9 @@ let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr =
     | Lambda (vv, e1, e2), l -> Lambda(vv, f k v e1, f (k+1) v e2), l
     | App (e1, e2), l -> App(f k v e1, f k v e2), l
     | Ann (e1, e2), l -> Ann(f k v e1, f k v e2), l
+    | HEq (t1, t2, e1, e2), l -> HEq (f k v t1, f k v t2, f k v e1, f k v e2), l
+    | HSubst, l -> HSubst, l 
+    | HRefl, l -> HRefl, l
 
 let rec top_db_to_var (v : Common.variable) (e :expr) : expr = 
   db_to_var 0 v e
@@ -130,6 +150,9 @@ let var_to_db (v : Common.variable) (e : expr) : expr =
     | Lambda (v, e1, e2), l -> Lambda(v, f n e1, f (n+1) e2), l
     | App (e1, e2), l -> App(f n e1, f n e2), l
     | Ann (e1, e2), l -> Ann(f n e1, f n e2), l
+    | HEq (t1, t2, e1, e2), l -> HEq (f n t1, f n t2, f n e1, f n e2), l
+    | HSubst, l -> HSubst, l 
+    | HRefl, l -> HRefl, l
   in
   f 0 e
 

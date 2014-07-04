@@ -1,0 +1,29 @@
+Inductive nat : Type 0 := 
+| Z : nat 
+| S : nat -> nat
+.
+
+Definition plus : nat -> nat -> nat :=
+fun m : nat =>  fun n : nat => 
+  nat-elim m 
+    (fun x : nat => nat)
+    n 
+    (fun nn : nat => fun prec : nat => S prec)
+.
+
+
+Definition  zero := Z.
+Definition   one := S Z.
+Definition   two := S one.
+Definition three := S two.
+Definition  four := S three.
+Definition  five := S four.
+Definition   six := S five.
+
+(* Tests written using built-in heterogenous equality *)
+
+Definition t0 : zero =[nat] (plus Z Z) := hrefl nat zero.
+Definition t1 : one =[nat] (plus Z (S Z)) := hrefl nat one.
+Definition t15 : one =[nat] (S (plus Z Z)) := hrefl nat one.
+Definition t2 : one =[nat] (plus (S Z) Z) := hrefl nat one. 
+Definition t3 : two =[nat] (plus (S Z) (S Z)) := hrefl nat (plus (S (S Z)) Z).

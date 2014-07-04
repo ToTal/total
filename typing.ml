@@ -18,10 +18,29 @@ let rec equal ctx e1' e2' =
       | Pi a1, Pi a2 -> equal_abstraction ctx a1 a2
       | Lambda a1, Lambda a2 -> equal_abstraction ctx a1 a2
       | App (n1, e1), App (n2, e2) -> equal ctx n1 n2 && equal ctx e1 e2
-      | (Var _ | Free _ | Const _ | Universe _ | Pi _ | Lambda _ | App _ | Subst _), _ -> false
+      | HEq (t1, t1', e1, e1'), HEq (t2, t2', e2, e2') ->
+	equal ctx t1 t2 && equal ctx t1' t2' &&
+	equal ctx e1 e2 && equal ctx e1' e2' 
+      | HRefl, HRefl | HSubst, HSubst -> true
+      | (Var _ | Free _ | Const _ | HEq _ | HRefl | HSubst
+	    | Universe _ | Pi _ | Lambda _ | App _ | Subst _), _ -> false
 
 and equal_abstraction (sigma, gamma as ctx) (x, e1, e2) (_, e1', e2') =
   equal ctx e1 e1' && equal (sigma, Ctx.extend gamma (x, e1)) e2 e2'
+
+(* TODO equality is only supported for Type 0, extend to other levels *)
+let hrefl_tp = mk_pi (Common.none_with "T", mk_universe 0, 
+		       mk_pi (Common.none_with "t", mk_var 0,
+			      mk_heq (mk_var 1) (mk_var 1) (mk_var 0) (mk_var 0)))
+
+let hsubst_tp = mk_pi (Common.none_with "R", mk_universe 0,
+		       mk_pi (Common.none_with "s", mk_var 0,
+			      mk_pi (Common.none_with "r", mk_var 1,
+				     mk_pi (Common.none_with "eq", 
+					    mk_heq (mk_var 2) (mk_var 2) (mk_var 1) (mk_var 0),
+					    mk_pi (Common.none_with "P", mk_arrow (mk_var 3) (mk_universe 0),
+						   mk_pi (Common.none_with "p", mk_app (mk_var 0) (mk_var 3),
+							  mk_app (mk_var 1) (mk_var 3)))))))
 
 (** [infer ctx e] infers the type of expression [e] in context [ctx]. *)
 let rec infer (sigma, gamma as ctx) (e, loc) =
@@ -55,6 +74,20 @@ let rec infer (sigma, gamma as ctx) (e, loc) =
 	 Error.typing ~loc
            "this expresion has type@ %t@ but@ %t@ was expected(annotation)"
            (Print.expr ctx t) (Print.expr ctx e2)
+    | HEq (t1, t2, e1, e2) -> 
+      let u1 = infer_universe ctx t1 in
+      let u2 = infer_universe ctx t2 in
+      (* TODO we are forcing the universe to be zero, remove this limitation *)
+      if u1 = u2 && u1 = 0 then		
+	let t1' = infer ctx e1 in
+	let t2' = infer ctx e2 in
+	if (equal ctx t1 t1') && (equal ctx t2 t2') 
+	then mk_universe u1 		(* TODO think about this *)
+	else Error.typing ~loc "Types in equality don't match"
+      else Error.typing ~loc 
+	"Levels %d and %d are different, or zero" u1 u2
+    | HRefl -> hrefl_tp
+    | HSubst -> hsubst_tp
 
 
 (** [infer_universe ctx t] infers the universe level of type [t] in context [ctx]. *)
@@ -62,12 +95,14 @@ and infer_universe (sigma, gamma as ctx) t =
   let u = infer ctx t in
     match fst (Norm.whnf ctx u) with
       | Universe u -> u
-      | Subst _ | App _ | Var _ | Free _ | Pi _ |Const _ | Lambda _ | Ann _ ->
+      | Subst _ | App _ | Var _ | Free _ | HEq _ | HRefl | HSubst
+      | Pi _ | Const _ | Lambda _ | Ann _ ->
         Error.typing ~loc:(snd t) "this expression has type@ %t@ but it should be a universe" (Print.expr ctx u)
 
 and infer_pi (sigma, gamma as ctx) e =
   let t = infer ctx e in
     match fst (Norm.whnf ctx t) with
       | Pi a -> a
-      | Subst _ | Var _ | Free _ | Const _ | App _ | Universe _ | Lambda _ | Ann _->
+      | Subst _ | App _ | Var _ | Free _ | HEq _ | HRefl | HSubst
+      | Universe _ | Const _| Lambda _ | Ann _->
         Error.typing ~loc:(snd e) "this expression has type@ %t@ but it should be a function" (Print.expr ctx t)

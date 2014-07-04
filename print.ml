@@ -92,6 +92,10 @@ let expr ctx =
         | Syntax.Universe u -> print ~at_level:1 "Type %d" u
         | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
         | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
+	| Syntax.HEq (t1, t2, e1, e2) ->
+	  print ~at_level:1 "%t =[%t ; %t] %t" (expr e1) (expr t1) (expr t2) (expr e2)
+	| Syntax.HRefl -> print "refl"
+	| Syntax.HSubst -> print "subst"
         | Syntax.App (e1, e2) ->
            print ~at_level:1 "%t@ %t" (expr ~max_level:1 e1) (expr ~max_level:0 e2)
         | Syntax.Ann (e1, e2) ->

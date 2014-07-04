@@ -37,6 +37,10 @@ fun x : e1 => e2                        function abstraction
 forall x : e1, e2                       dependent product
 e1 e2                                   application
 e1 : e2                                 type annotation
+e1 =[t1;t2] e2                          heterogenous equality type
+e1 =[t1] e2                             same as before when t1 is the same as t2
+hrefl T t                               term for t =[T ; T] t
+hsubst T s t q P p                      eliminator for heterogeneous equality
 " ;;
 
 (** A list of files to be loaded and run. *)
