@@ -96,6 +96,9 @@ let options = Arg.align [
   ("--debug", 
    Arg.Unit (fun _ -> Config.debug := true ; Print.verbosity := Print.debug_verbosity),
    " Print additional debug info (potential very verbose)");
+  ("--disable_set",
+   Arg.Set Config.disable_set,
+   " Disable the Set command (useful for forcing the totality checker).");
 ]
 
 (** Treat anonymous arguments as files to be run. *)

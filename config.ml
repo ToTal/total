@@ -23,6 +23,8 @@ let check_tainted_totality () =
   if not !check_positivity then
     totality_is_tainted := true
 
+let disable_set = ref false
+
 (* Setting handling *)
 
 exception SettingExc of string
@@ -63,6 +65,7 @@ let settings =
   ]
 
 let set_option n v =
+  if !disable_set then raise (SettingExc "Cannot change settings (Set is disabled)") ;
   try 
     let entry = List.assoc n settings in
     entry.set v ;
@@ -83,5 +86,6 @@ let str_of_setting = function
 let get_settings_doc () = 
   List.fold_left (fun r (s, e) -> 
 		  s ^ " := " ^ (str_of_setting (e.get ())) ^ "\t(" ^ e.help ^ ")\n" ^ r)
-		 (if !totality_is_tainted then "Totality may be tainted." else "")
+		 (if !totality_is_tainted then "Totality may be tainted.\n" else "" ^
+		 if !disable_set then "Set disabled.\n" else "")
 		 settings
