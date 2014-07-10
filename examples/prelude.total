@@ -1,0 +1,44 @@
+(* This is not loaded by default *)
+
+(* Unit type: *)
+
+Inductive unit : Type 0 := | one : unit.
+
+(* Simply typed pairs *)
+
+Inductive pair : Type 0 -> Type 0 -> Type 0 := 
+| p : forall (A : Type 0) (B : Type 0), A -> B -> pair A B
+.
+
+Definition fst : forall (A : Type 0) (B : Type 0), pair A B -> A :=
+fun (A : Type 0) (B : Type 0) (t : pair A B) =>
+    	 pair-elim A B t (fun (A : Type 0) (B : Type 0) (ps : pair A B) => A)
+         	      (fun (A' : Type 0) (B' : Type 0) (a : A') (b : B') =>
+	       	      a)
+
+    
+. 
+
+Definition snd : forall (A : Type 0) (B : Type 0), pair A B -> B :=
+fun (A : Type 0) (B : Type 0) (t : pair A B) =>
+    	 pair-elim A B t (fun (A : Type 0) (B : Type 0) (ps : pair A B) => B)
+         	      (fun (A' : Type 0) (B' : Type 0) (a : A') (b : B') =>
+	       	      b)
+
+    
+. 
+
+(* Natural numbers *)
+
+Inductive nat : Type 0 := 
+| z : nat 
+| s : nat -> nat
+.
+
+Definition plus : nat -> nat -> nat :=
+fun m : nat =>  fun n : nat => 
+  nat-elim m 
+    (fun x : nat => nat)
+    n 
+    (fun nn : nat => fun prec : nat => s prec)
+.
