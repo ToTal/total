@@ -16,7 +16,7 @@ Definition add := (plus : (Nat -> Nat -> Nat)).
 Context.
 
 Definition cero := plus Z Z.
-Option --debug.
+Set Debug := Off.
 Eval cero.
 
 
