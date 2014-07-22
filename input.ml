@@ -4,7 +4,7 @@
 type expr = expr' * Common.position
 and expr' =
   | Var of Common.name
-  | Universe of int
+  | Type
   | Pi of abstraction
   | Lambda of abstraction
   | App of expr * expr

@@ -2,7 +2,7 @@ open Syntax
 open Su
 
 let rec is_kind c = function 
-  | Universe _, _ -> true
+  | Type, _ -> true
   | Pi (_,_, e),_ -> is_kind c e
   | Subst _ as e, l -> is_kind c (Norm.whnf c (e, l))
   | _, _ -> false
@@ -26,7 +26,7 @@ let constructs_type x t =
 let positive ctx t x = 
   let rec appears = function
     | Const x', _ -> x = x'
-    |HRefl, _ | HSubst, _ | Var _, _ | Free _, _ | Universe _, _ -> false
+    |HRefl, _ | HSubst, _ | Var _, _ | Free _, _ | Type, _ -> false
     | Subst (s, e), _ -> appears e || sapp s
     | Pi (_, t, e), _ | Lambda (_, t, e), _ -> appears t || appears e
     | App (e1, e2),_ | Ann (e1,e2),_ -> appears e1 || appears e2
@@ -78,7 +78,7 @@ let motive_ty sigma d t =
   let p_tel = params @ [(Common.none_with "D", d')] in
   Print.debug "Telescope for P : [%t]" (Print.tele ctx p_tel) ;
 
-  let p = set_telescope p_tel (mk_universe 0) (fun x t e -> mk_pi(x, t, e)) in
+  let p = set_telescope p_tel (mk_universe ()) (fun x t e -> mk_pi(x, t, e)) in
   Print.debug "Motive for %s is P : %t" d (Print.expr ctx p) ;
   p
 

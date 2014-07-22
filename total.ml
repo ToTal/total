@@ -179,7 +179,7 @@ let rec exec_cmd interactive sigma (d, loc) =
        sigma
     | Input.Axiom (x, t) ->
       let t = Desugar.desugar sigma t in
-      let _ =  Typing.infer_universe (ctx_from sigma) t in
+      Typing.is_universe (ctx_from sigma) t ; 
         if interactive then
           Format.printf "%s is assumed.@." x ;
         add_axiom x t Ctx.User sigma

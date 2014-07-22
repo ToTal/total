@@ -11,7 +11,7 @@ and expr' =
   | Free of Common.variable	 (* an open variable (variables are unique *)
   | Const of Common.name	 (* something from the signature *)
   | Subst of substitution * expr (* explicit substitution *)
-  | Universe of universe
+  | Type                         (* Type:Type TODO: stratify! *)
   | Pi of abstraction
   | Lambda of abstraction
   | App of expr * expr
@@ -34,7 +34,7 @@ and substitution =
 (** Expression constructors wrapped in "nowhere" positions. *)
 let mk_var k = Common.nowhere (Var k)
 let mk_subst s e = Common.nowhere (Subst (s, e))
-let mk_universe u = Common.nowhere (Universe u)
+let mk_universe () = Common.nowhere Type
 let mk_pi a = Common.nowhere (Pi a)
 let mk_arrow s t = mk_pi (Common.none (), s, t)
 let mk_lambda a = Common.nowhere (Lambda a)
@@ -70,7 +70,7 @@ let subst =
       | Dot (a, s), Var k -> subst s (Var (k - 1), loc)
       | s, Subst (t, e) -> subst s (subst t e)
       | _, Const x -> e
-      | _, Universe _ -> e
+      | _, Type -> e
       | s, Pi a -> Pi (subst_abstraction s a), loc
       | s, Lambda a -> Lambda (subst_abstraction s a), loc
       | s, App (e1, e2) -> App (ms e1, ms e2), loc
@@ -93,7 +93,7 @@ let rec occurs k (e, _) =
     | Free _ -> false
     | Const x -> false
     | Subst (s, e) -> occurs k (subst s e)
-    | Universe _ -> false
+    | Type -> false
     | Pi a -> occurs_abstraction k a
     | Lambda a -> occurs_abstraction k a
     | App (e1, e2) -> occurs k e1 || occurs k e2
@@ -121,7 +121,7 @@ let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr =
     | Free v', l -> Free v', l
     | Const c, l -> Const c, l
     | Subst (s, e), l -> Subst (fsub k s, f k v e), l
-    | Universe n, l -> Universe n, l
+    | Type, l -> Type, l
     | Pi (vv, e1, e2), l -> Pi(vv, f k v e1, f (k+1) v e2), l
     | Lambda (vv, e1, e2), l -> Lambda(vv, f k v e1, f (k+1) v e2), l
     | App (e1, e2), l -> App(f k v e1, f k v e2), l
@@ -145,7 +145,7 @@ let var_to_db (v : Common.variable) (e : expr) : expr =
     | Free v', l -> Free v', l
     | Const c, l -> Const c, l
     | Subst (s, e), l -> Printf.printf "PROBABLY WRONG IMPLEMENTATION" ; Subst (fsub n s, f n e), l
-    | Universe n, l -> Universe n, l
+    | Type, l -> Type, l
     | Pi (v, e1, e2), l -> Pi(v, f n e1, f (n+1) e2), l
     | Lambda (v, e1, e2), l -> Lambda(v, f n e1, f (n+1) e2), l
     | App (e1, e2), l -> App(f n e1, f n e2), l

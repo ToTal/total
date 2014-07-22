@@ -151,8 +151,8 @@ app_expr: mark_position(plain_app_expr) { $1 }
 plain_app_expr:
   | e = plain_simple_expr
     { e }
-  | TYPE k = NUMERAL
-    { Universe k }
+  | TYPE NUMERAL?
+    { Type }
   | e1 = app_expr COLON e2 = simple_expr
     { Ann (e1, e2) }
   | e1 = app_expr e2 = simple_expr

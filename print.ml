@@ -89,7 +89,7 @@ let expr ctx =
 	| Syntax.Free v -> print "%s" (var v)
 	| Syntax.Const x -> print "%s" x
         | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
-        | Syntax.Universe u -> print ~at_level:1 "Type %d" u
+        | Syntax.Type -> print ~at_level:1 "Type"
         | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
         | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
 	| Syntax.HEq (t1, t2, e1, e2) ->

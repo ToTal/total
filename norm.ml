@@ -34,8 +34,8 @@ let norm ?(weak=false) =
        (* Error.violation "Cannont normalize terms with free variables" *) (* TODO THIS SHOULD BE A VIOLATION *)
        let sp_e = if weak then sp_e else List.map (norm ctx) sp_e in
        join_head_spine h_e sp_e
-    | Universe _, loc when empty_sp ->  e
-    | Universe _, loc -> Error.violation "Unexpected non-empty spine with a Universe head."
+    | Type, loc when empty_sp ->  e
+    | Type, loc -> Error.violation "Unexpected non-empty spine with a Universe head."
     | Pi a, loc when empty_sp -> Pi (norm_abstraction ctx a), loc
     | Pi a, loc -> Error.violation "Unexpected non-empty spine with a Pi head."
     | App _, _ -> Error.violation "Unexpected, head cannot be an application."

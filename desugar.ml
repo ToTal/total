@@ -11,7 +11,7 @@ let desugar sigma =
 	   Syntax.Const x
 	 else
 	   Syntax.Var (Ctx.index ~loc x gamma)
-      | Input.Universe u -> Syntax.Universe u
+      | Input.Type -> Syntax.Type
       | Input.Pi a -> Syntax.Pi (desugar_abstraction gamma a)
       | Input.Lambda a -> Syntax.Lambda (desugar_abstraction gamma a)
       | Input.App (e1, e2) -> Syntax.App (d e1, d e2)
