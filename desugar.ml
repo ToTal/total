@@ -12,7 +12,8 @@ let desugar sigma =
 	 else
 	   Syntax.Var (Ctx.index ~loc x gamma)
       | Input.Type -> Syntax.Type
-      | Input.Pi a -> Syntax.Pi (desugar_abstraction gamma a)
+      | Input.Pi a -> Syntax.Pi (desugar_ann_abstraction gamma a)
+      | Input.LambdaAnn a -> Syntax.LambdaAnn (desugar_ann_abstraction gamma a)
       | Input.Lambda a -> Syntax.Lambda (desugar_abstraction gamma a)
       | Input.App (e1, e2) -> Syntax.App (d e1, d e2)
       | Input.Ann (e1, e2) -> Syntax.Ann (d e1, d e2)
@@ -20,9 +21,11 @@ let desugar sigma =
       | Input.HRefl -> Syntax.HRefl
       | Input.HSubst -> Syntax.HSubst
     ), loc
-  and desugar_abstraction gamma (x, t, e) =
+  and desugar_ann_abstraction gamma (x, t, e) =
     let t = desugar gamma t in
     (x, t, desugar (Ctx.extend gamma (x, t)) e)
+  and desugar_abstraction gamma (x, e) =
+    (x, desugar (Ctx.extend gamma (x, Syntax.mk_universe ())) e) (* we don't care about the type at this point *)
   in
     desugar Ctx.empty_context
 

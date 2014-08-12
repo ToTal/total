@@ -62,7 +62,7 @@ let expr ctx =
       print ~at_level:3 ppf "%t ->@ %t" (expr ~max_level:2 ctx e1) (expr (sigma, Ctx.extend gamma (Common.none (), e1)) e2)
 
   (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
-  and lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
+  and ann_lambda (sigma, gamma as ctx) (x, e1, e2) ppf =
     let x =
       if Syntax.occurs 0 e2
       then Beautify.refresh x (Ctx.names ctx)
@@ -73,6 +73,20 @@ let expr ctx =
 	  x 
 	  (expr ctx e1) 
 	  (expr (sigma, Ctx.extend gamma (Common.some x, e1)) e2)
+
+  (** [lambda xs a ppf] prints abstraction [a] as a function using formatter [ppf]. *)
+  and lambda (sigma, gamma as ctx) (x, e) ppf =
+    let x =
+      if Syntax.occurs 0 e
+      then Beautify.refresh x (Ctx.names ctx)
+      else "_"
+    in
+    print ~at_level:3 ppf 
+	  "fun %s => %t" 
+	  x 
+	  (* WARNING : gamma extended with bogus, make pp type directed to fix this
+	               all kinds of good things may come out of this *)
+	  (expr (sigma, Ctx.extend gamma (Common.some x, Syntax.mk_universe ())) e)
 
   (** [expr ctx e ppf] prints expression [e] using formatter [ppf]. *)
   and expr ?max_level (_sigma, gamma as ctx) e ppf =
@@ -91,6 +105,7 @@ let expr ctx =
         | Syntax.Subst (s, e) -> let e = Syntax.subst s e in print "%t" (expr e)
         | Syntax.Type -> print ~at_level:1 "Type"
         | Syntax.Pi a -> print ~at_level:3 "%t" (pi ctx a)
+        | Syntax.LambdaAnn a -> print ~at_level:3 "%t" (ann_lambda ctx a)
         | Syntax.Lambda a -> print ~at_level:3 "%t" (lambda ctx a)
 	| Syntax.HEq (t1, t2, e1, e2) ->
 	  print ~at_level:1 "%t =[%t ; %t] %t" (expr e1) (expr t1) (expr t2) (expr e2)

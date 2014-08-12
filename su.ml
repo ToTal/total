@@ -12,7 +12,7 @@ let get_telescope e =
     | Pi (x, t, e),loc -> 
        let tel, rest = get_telescope (top_db_to_var x e) in
        (x, t)::tel, rest
-    | Lambda _,_ -> Error.violation "Lambda found in a telescope, add?"
+    | LambdaAnn _,_ -> Error.violation "Lambda found in a telescope, add?"
     | rest -> [], rest
   in
   get_telescope e 

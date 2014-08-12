@@ -1,19 +1,29 @@
 %{
   open Input
 
+  type param_list =
+    | With of Common.variable list * expr	(* parameters with type annotations *)
+    | Without of Common.variable list	        (* without type annotations *)
+
   (* Build nested lambdas *)
-  let rec make_lambda e = function
+  let rec make_lambda_ann e = function
     | [] -> e
-    | ((xs, t), loc) :: lst ->
-      let e = make_lambda e lst in
-        List.fold_right (fun x e -> (Lambda (x, t, e), loc)) xs e
+    | (With (xs, t), loc) :: lst ->
+      let e = make_lambda_ann e lst in
+        List.fold_right (fun x e -> (LambdaAnn (x, t, e), loc)) xs e
+    | (Without xs, loc) :: lst ->   
+      let e = make_lambda_ann e lst in
+        List.fold_right (fun x e -> (Lambda (x, e), loc)) xs e
+
 
   (* Build nested pies *)
   let rec make_pi e = function
     | [] -> e
-    | ((xs, t), loc) :: lst ->
+    | (With (xs, t), loc) :: lst ->
       let e = make_pi e lst in
         List.fold_right (fun x e -> (Pi (x, t, e), loc)) xs e
+    | (Without _, _) :: _ ->
+      assert false
 
 %}
 
@@ -142,7 +152,7 @@ plain_expr:
   | FORALL lst = abstraction COMMA e = expr
     { fst (make_pi e lst) }
   | FUN lst = abstraction DARROW e = expr
-    { fst (make_lambda e lst) }
+    { fst (make_lambda_ann e lst) }
   | t1 = app_expr ARROW t2 = expr
     { Pi (Common.none (), t1, t2) }
 
@@ -176,18 +186,20 @@ plain_simple_expr:
 abstraction:
   | b = bind1
     { [b] }
-  | bs = binds
+  | bs = bindAnns
     { bs }
 
 bind1: mark_position(plain_bind1) { $1 }
 plain_bind1:
   | xs = nonempty_list(NAME) COLON t = expr
-    { (List.map (fun x-> Common.some x) xs, t) }
+    { With (List.map Common.some xs, t) }
+  | xs = nonempty_list(NAME) 
+    { Without (List.map Common.some xs) }
 
-binds:
+bindAnns:
   | LPAREN b = bind1 RPAREN
     { [b] }
-  | LPAREN b = bind1 RPAREN lst = binds
+  | LPAREN b = bind1 RPAREN lst = bindAnns
     { b :: lst }
 
 mark_position(X):

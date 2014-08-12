@@ -28,7 +28,7 @@ let positive ctx t x =
     | Const x', _ -> x = x'
     |HRefl, _ | HSubst, _ | Var _, _ | Free _, _ | Type, _ -> false
     | Subst (s, e), _ -> appears e || sapp s
-    | Pi (_, t, e), _ | Lambda (_, t, e), _ -> appears t || appears e
+    | Pi (_, t, e), _ | LambdaAnn (_, t, e), _ -> appears t || appears e
     | App (e1, e2),_ | Ann (e1,e2),_ -> appears e1 || appears e2
     | HEq (t1, t2, e1, e2),_ ->
       appears t1 || appears t2 ||

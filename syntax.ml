@@ -12,7 +12,8 @@ and expr' =
   | Const of Common.name	 (* something from the signature *)
   | Subst of substitution * expr (* explicit substitution *)
   | Type                         (* Type:Type TODO: stratify! *)
-  | Pi of abstraction
+  | Pi of ann_abstraction
+  | LambdaAnn of ann_abstraction
   | Lambda of abstraction
   | App of expr * expr
   | Ann of expr * expr
@@ -24,7 +25,8 @@ and expr' =
 
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. We also keep around
     the original name [x] of the bound variable for pretty-printing purposes. *)
-and abstraction = Common.variable * expr * expr
+and ann_abstraction = Common.variable * expr * expr
+and abstraction = Common.variable * expr
 
 (** Explicit substitutions. *)
 and substitution =
@@ -37,7 +39,7 @@ let mk_subst s e = Common.nowhere (Subst (s, e))
 let mk_universe () = Common.nowhere Type
 let mk_pi a = Common.nowhere (Pi a)
 let mk_arrow s t = mk_pi (Common.none (), s, t)
-let mk_lambda a = Common.nowhere (Lambda a)
+let mk_lambda a = Common.nowhere (LambdaAnn a)
 let mk_app e1 e2 = Common.nowhere (App (e1, e2))
 let mk_const c = Common.nowhere (Const c)
 let mk_heq t1 t2 e1 e2 = Common.nowhere(HEq (t1, t2, e1, e2))
@@ -72,7 +74,8 @@ let subst =
       | _, Const x -> e
       | _, Type -> e
       | s, Pi a -> Pi (subst_abstraction s a), loc
-      | s, Lambda a -> Lambda (subst_abstraction s a), loc
+      | s, LambdaAnn a -> LambdaAnn (subst_abstraction s a), loc
+      | s, Lambda (x, e) -> Lambda (x, mk_subst (Dot (mk_var 0, compose (Shift 1) s)) e), loc
       | s, App (e1, e2) -> App (ms e1, ms e2), loc
       | s, Ann (e1, e2) -> Ann (ms e1, ms e2), loc
       | s, HEq (t1, t2, e1, e2) -> HEq (ms t1, ms t2, ms e1, ms e2), loc
@@ -95,7 +98,8 @@ let rec occurs k (e, _) =
     | Subst (s, e) -> occurs k (subst s e)
     | Type -> false
     | Pi a -> occurs_abstraction k a
-    | Lambda a -> occurs_abstraction k a
+    | LambdaAnn a -> occurs_abstraction k a
+    | Lambda (x, e) -> occurs (k + 1) e
     | App (e1, e2) -> occurs k e1 || occurs k e2
     | Ann (e1, e2) -> occurs k e1 || occurs k e2
     | HEq (t1, t2, e1, e2) -> 
@@ -123,7 +127,8 @@ let rec db_to_var (k : int) (v : Common.variable) (e :expr) : expr =
     | Subst (s, e), l -> Subst (fsub k s, f k v e), l
     | Type, l -> Type, l
     | Pi (vv, e1, e2), l -> Pi(vv, f k v e1, f (k+1) v e2), l
-    | Lambda (vv, e1, e2), l -> Lambda(vv, f k v e1, f (k+1) v e2), l
+    | LambdaAnn (vv, e1, e2), l -> LambdaAnn(vv, f k v e1, f (k+1) v e2), l
+    | Lambda (x, e), l -> Lambda(x, f (k+1) v e), l
     | App (e1, e2), l -> App(f k v e1, f k v e2), l
     | Ann (e1, e2), l -> Ann(f k v e1, f k v e2), l
     | HEq (t1, t2, e1, e2), l -> HEq (f k v t1, f k v t2, f k v e1, f k v e2), l
@@ -147,7 +152,8 @@ let var_to_db (v : Common.variable) (e : expr) : expr =
     | Subst (s, e), l -> Printf.printf "PROBABLY WRONG IMPLEMENTATION" ; Subst (fsub n s, f n e), l
     | Type, l -> Type, l
     | Pi (v, e1, e2), l -> Pi(v, f n e1, f (n+1) e2), l
-    | Lambda (v, e1, e2), l -> Lambda(v, f n e1, f (n+1) e2), l
+    | LambdaAnn (v, e1, e2), l -> LambdaAnn(v, f n e1, f (n+1) e2), l
+    | Lambda (x, t), l -> Lambda (x, f (n+1) e), l
     | App (e1, e2), l -> App(f n e1, f n e2), l
     | Ann (e1, e2), l -> Ann(f n e1, f n e2), l
     | HEq (t1, t2, e1, e2), l -> HEq (f n t1, f n t2, f n e1, f n e2), l

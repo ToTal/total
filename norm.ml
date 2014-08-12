@@ -12,9 +12,11 @@ let norm ?(weak=false) =
     let empty = function | [] -> true | _ -> false in
     let empty_sp = empty sp_e in
     match h_e with
+    | LambdaAnn a, loc when empty_sp ->
+       LambdaAnn (norm_ann_abstraction ctx a), loc
     | Lambda a, loc when empty_sp ->
-       Lambda (norm_abstraction ctx a), loc
-    | Lambda (_, _, body), loc -> (* lambda with a spine triggers a beta reduction *)
+       LambdaAnn (norm_abstraction ctx a), loc
+    | LambdaAnn (_, _, body), loc -> (* lambda with a spine triggers a beta reduction *)
        norm ctx (join_head_spine (norm ctx (mk_subst (Dot (List.hd sp_e, idsubst)) body)) (List.tl sp_e))
     | Const x, loc when is_elim sigma x && not empty_sp ->
        (* may trigger an iota reduction *)
@@ -36,7 +38,7 @@ let norm ?(weak=false) =
        join_head_spine h_e sp_e
     | Type, loc when empty_sp ->  e
     | Type, loc -> Error.violation "Unexpected non-empty spine with a Universe head."
-    | Pi a, loc when empty_sp -> Pi (norm_abstraction ctx a), loc
+    | Pi a, loc when empty_sp -> Pi (norm_ann_abstraction ctx a), loc
     | Pi a, loc -> Error.violation "Unexpected non-empty spine with a Pi head."
     | App _, _ -> Error.violation "Unexpected, head cannot be an application."
     | Ann (e, t), loc when empty_sp -> Ann(norm ctx e, norm ctx t), loc
@@ -47,6 +49,10 @@ let norm ?(weak=false) =
     | HSubst, loc -> Util.maybe (hsubst ctx sp_e) (fun _ -> e)
   
 			      
+  and norm_ann_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
+    if weak then a
+    else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)
+
   and norm_abstraction (sigma, gamma as ctx) ((x, t, e) as a) =
     if weak then a
     else (x, norm ctx t, norm (sigma, extend gamma (x, t)) e)

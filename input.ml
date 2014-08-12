@@ -5,7 +5,8 @@ type expr = expr' * Common.position
 and expr' =
   | Var of Common.name
   | Type
-  | Pi of abstraction
+  | Pi of ann_abstraction
+  | LambdaAnn of ann_abstraction
   | Lambda of abstraction
   | App of expr * expr
   | Ann of expr * expr
@@ -14,7 +15,8 @@ and expr' =
   | HSubst
  
 (** An abstraction [(x,t,e)] indicates that [x] of type [t] is bound in [e]. *)
-and abstraction = Common.variable * expr * expr
+and ann_abstraction = Common.variable * expr * expr
+and abstraction = Common.variable * expr
 
 type clause = 
   | Clause of expr list * expr

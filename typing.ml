@@ -16,14 +16,14 @@ let rec equal ctx e1' e2' =
       | Const x1, Const x2 -> x1 = x2
       | Type, Type -> true
       | Pi a1, Pi a2 -> equal_abstraction ctx a1 a2
-      | Lambda a1, Lambda a2 -> equal_abstraction ctx a1 a2
+      | LambdaAnn a1, LambdaAnn a2 -> equal_abstraction ctx a1 a2
       | App (n1, e1), App (n2, e2) -> equal ctx n1 n2 && equal ctx e1 e2
       | HEq (t1, t1', e1, e1'), HEq (t2, t2', e2, e2') ->
 	equal ctx t1 t2 && equal ctx t1' t2' &&
 	equal ctx e1 e2 && equal ctx e1' e2' 
       | HRefl, HRefl | HSubst, HSubst -> true
       | (Var _ | Free _ | Const _ | HEq _ | HRefl | HSubst
-	    | Type | Pi _ | Lambda _ | App _ | Subst _), _ -> false
+	    | Type | Pi _ | LambdaAnn _ | App _ | Subst _), _ -> false
 
 and equal_abstraction (sigma, gamma as ctx) (x, e1, e2) (_, e1', e2') =
   equal ctx e1 e1' && equal (sigma, Ctx.extend gamma (x, e1)) e2 e2'
@@ -54,7 +54,7 @@ let rec infer (sigma, gamma as ctx) (e, loc) =
       is_universe (sigma, Ctx.extend gamma (x, e1)) e2 ;
       mk_universe ()
     | Subst (s, e) -> infer ctx (Syntax.subst s e)
-    | Lambda (x, e1, e2) ->
+    | LambdaAnn (x, e1, e2) ->
       is_universe ctx e1 ;
       let t2 = infer (sigma, Ctx.extend gamma (x, e1)) e2 in
         mk_pi (x, e1, t2)
@@ -92,7 +92,7 @@ and is_universe (sigma, gamma as ctx) t =
       match fst (Norm.whnf ctx u) with
       | Type -> ()
       | Subst _ | App _ | Var _ | Free _ | HEq _ | HRefl | HSubst
-      | Pi _ | Const _ | Lambda _ | Ann _ ->
+      | Pi _ | Const _ | LambdaAnn _ | Ann _ ->
         Error.typing ~loc:(snd t) "this expression has type@ %t@ but it should be a universe" (Print.expr ctx u)
 
 and infer_pi (sigma, gamma as ctx) e =
@@ -100,5 +100,5 @@ and infer_pi (sigma, gamma as ctx) e =
     match fst (Norm.whnf ctx t) with
       | Pi a -> a
       | Subst _ | App _ | Var _ | Free _ | HEq _ | HRefl | HSubst
-      | Type | Const _| Lambda _ | Ann _->
+      | Type | Const _| LambdaAnn _ | Ann _->
         Error.typing ~loc:(snd e) "this expression has type@ %t@ but it should be a function" (Print.expr ctx t)
