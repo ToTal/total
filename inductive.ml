@@ -11,8 +11,8 @@ let ctx_from sigma = (sigma, Ctx.empty_context)
 
 let elab_type_constr sigma x t =
   let ctx = ctx_from sigma in
-  let _ = Typing.infer ctx t in
-  if not (is_kind ctx (Norm.whnf ctx t)) then
+  let _ = Typing.synth ctx t in
+  if not (is_kind sigma (Norm.whnf sigma t)) then
     Error.typing ~loc:(snd t) "expresion @ %t@ is not a kind" (Print.expr ctx t) ;
   Ctx.add_constr x t 0 Ctx.User sigma 	(* type constructor is number 0 *)
 
@@ -29,6 +29,7 @@ let positive ctx t x =
     |HRefl, _ | HSubst, _ | Var _, _ | Free _, _ | Type, _ -> false
     | Subst (s, e), _ -> appears e || sapp s
     | Pi (_, t, e), _ | LambdaAnn (_, t, e), _ -> appears t || appears e
+    | Lambda (_, e),_ -> appears e
     | App (e1, e2),_ | Ann (e1,e2),_ -> appears e1 || appears e2
     | HEq (t1, t2, e1, e2),_ ->
       appears t1 || appears t2 ||
@@ -56,8 +57,8 @@ let validate_constrs (sigma : Ctx.signature)
       Error.typing ~loc:(snd t) 
 		   "constructor %s does not construct type %s (%t )" 
 		   c x (Print.expr ctx t) ;
-    let k = Typing.infer ctx t in
-    if not (is_kind ctx k)then
+    let k = Typing.synth ctx t in
+    if not (is_kind sigma k)then
       Error.typing ~loc:(snd t)
     		   "constructor %s does not construct a type (%t has type %t)"
     		   c (Print.expr ctx t) (Print.expr ctx k) ;
@@ -98,7 +99,7 @@ let method_ty sigma d t c ct p_nm =
   Print.debug "constr_tel = %t" (Print.tele ctx constr_tel) ;
 
   (* The parameters that represent a recursive call *)
-  let recs = List.filter (fun (x, t) -> produces_constr ctx d t) constr_tel in
+  let recs = List.filter (fun (x, t) -> produces_constr d t) constr_tel in
 
   Print.debug "t = %t" (Print.expr ctx t) ;
   Print.debug "d = %s" d ;
@@ -160,8 +161,8 @@ let elim sigma d t cs =
 
   Print.debug "Final eliminator = %t" (Print.expr ctx elim_ty) ;
 
-  let kind = Typing.infer ctx elim_ty in
-  if not (is_kind ctx (Norm.whnf ctx kind)) then
+  let kind = Typing.synth ctx elim_ty in
+  if not (is_kind sigma (Norm.whnf sigma kind)) then
     Error.violation 
       "expresion @ %t@  in eliminator is not a kind @ %t@ (inductive.ml)"
       (Print.expr ctx elim_ty) (Print.expr ctx kind);

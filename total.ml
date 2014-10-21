@@ -123,16 +123,16 @@ let rec exec_cmd interactive sigma (d, loc) =
   let ctx = ctx_from sigma in
   let eval_whnf weak e =
       let e = Desugar.desugar sigma e in
-      let t = Typing.infer ctx e in
-      let e' = (if weak then Norm.whnf else Norm.nf) ctx e in
+      let t = Typing.synth ctx e in
+      let e' = (if weak then Norm.whnf else Norm.nf) sigma e in
       begin if !Config.debug then 
-	      let t' = Typing.infer ctx e' in 
+	      let t' = Typing.synth ctx e' in 
 	      if not(Typing.equal ctx t t') then
 	      Error.runtime ~loc:(snd e) 
 			    "Type preservation bug. e' = %t@ has type t' = %t expected t=%t"
 			    (Print.expr ctx e')
-			    (Print.expr ctx (Norm.nf ctx t')) 
-			    (Print.expr ctx (Norm.nf ctx t));
+			    (Print.expr ctx (Norm.nf sigma t')) 
+			    (Print.expr ctx (Norm.nf sigma t));
 	      ()
 
       end; 
@@ -144,14 +144,14 @@ let rec exec_cmd interactive sigma (d, loc) =
        if interactive then
          Format.printf "    = %t@\n    : %t@."
 		       (Print.expr ctx e')
-		       (Print.expr ctx (Norm.nf ctx t)) ;
+		       (Print.expr ctx (Norm.nf sigma t)) ;
        sigma
     | Input.Whnf e ->
        let e', t = eval_whnf true e in
        if interactive then
          Format.printf "    ~> %t@\n    : %t@."
 		       (Print.expr ctx e')
-		       (Print.expr ctx (Norm.nf ctx t)) ;
+		       (Print.expr ctx (Norm.nf sigma t)) ;
        sigma
     | Input.Context ->
        let 
@@ -183,22 +183,30 @@ let rec exec_cmd interactive sigma (d, loc) =
         if interactive then
           Format.printf "%s is assumed.@." x ;
         add_axiom x t Ctx.User sigma
-    | Input.Definition (x, ann,  e) ->
+    (* We start checking when we have type information *)
+    | Input.Definition (x, Some t, e) -> 
+       Print.debug "CHECKING@." ;
+       let ctx = ctx_from sigma in
+       if Ctx.mem x sigma then Error.typing ~loc "%s already exists" x ;
+       let t = Desugar.desugar sigma t in
+       let e = Desugar.desugar sigma e in
+       let t' = Typing.check ctx e t in
+       if interactive then
+	 Format.printf "%s is defined.@." x ;
+       add_definition x (Norm.nf sigma t') e User sigma
+
+    (* We try to synthesize otherwise *)
+    | Input.Definition (x, None,  e) ->
        let ctx = ctx_from sigma in
        if Ctx.mem x sigma then Error.typing ~loc "%s already exists" x ;
        let e = Desugar.desugar sigma e in
-       let t = Typing.infer ctx e in
-       (match ann with
-	| None -> ()
-	| Some t' when Typing.equal (ctx_from sigma) (Desugar.desugar sigma t') t -> ()
-	| Some t' -> Error.typing ~loc "%s has type@ %t@ but@ %t@ was expected"
-				 x (Print.expr ctx t) (Print.expr ctx (Desugar.desugar sigma t'))) ;
+       let t = Typing.synth ctx e in
        if interactive then
          Format.printf "%s is defined.@." x ;
-       add_definition x (Norm.nf ctx t) e User sigma
+       add_definition x (Norm.nf sigma t) e User sigma
     | Input.Check e ->
       let e = Desugar.desugar sigma e in
-      let t = Typing.infer (ctx_from sigma) e in
+      let t = Typing.synth (ctx_from sigma) e in
         Format.printf "%t@\n    : %t@." (Print.expr (ctx_from sigma) e) (Print.expr (ctx_from sigma) t) ;
         sigma
     | Input.Inductive (x, t, cs) ->
