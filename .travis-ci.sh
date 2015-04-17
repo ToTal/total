@@ -2,7 +2,6 @@
 OPAM_DEPENDS="ocamlfind menhir"
 
 case "$OCAML_VERSION" in
-3.12.1) ppa=avsm/ocaml312+opam12 ;;
 4.00.1) ppa=avsm/ocaml40+opam12 ;;
 4.01.0) ppa=avsm/ocaml41+opam12 ;;
 4.02.1) ppa=avsm/ocaml42+opam12 ;;
