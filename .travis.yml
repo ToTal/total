@@ -1,5 +1,6 @@
     language: c
-    script: bash -ex .travis-ci.sh
+    script: bash -ex .travis-ci.sh\
+    sudo: required
     env:
       - OCAML_VERSION=4.02.1	
       - OCAML_VERSION=4.01.0
