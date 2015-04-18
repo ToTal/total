@@ -1,6 +1,10 @@
 A minimalist implementation of type theory in Ocaml. This is based on Andrej Bauer's version from the 3rd
 part of his blog posts, see [How to implement dependent type theory III](http://math.andrej.com/2012/11/29/how-to-implement-dependent-type-theory-iii/).
 
+## Build Status
+
+[![Build Status](https://travis-ci.org/fferreira/total.svg?branch=master)](https://travis-ci.org/fferreira/total)
+
 ## What's new
 
 * Inductive types with eliminators.
