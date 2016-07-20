@@ -1,0 +1,7 @@
+To prove that zero is not equal to suc n, we need to read the following:
+
+Martin-Lof Type Theory by Nordstrom et al (Section 5.9)
+
+and
+
+The Independence of Peano's Fourth Axiom from Martin-Löf's Type Theory Without Universes by Smith
